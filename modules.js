@@ -8,12 +8,12 @@ import { supabase, renderIcon, toast, navigateTo } from './app.js';
 // ═══════════════════════════════════════════════════════
 // UTILS
 // ═══════════════════════════════════════════════════════
-export const R$ = (v) => Number(v || 0).toLocaleString('pt-BR', { 
-    style: 'currency', currency: 'BRL' 
+export const R$ = (v) => Number(v || 0).toLocaleString('pt-BR', {
+    style: 'currency', currency: 'BRL'
 });
 
-export const pct = (v) => Number(v || 0).toLocaleString('pt-BR', { 
-    style: 'percent', minimumFractionDigits: 1 
+export const pct = (v) => Number(v || 0).toLocaleString('pt-BR', {
+    style: 'percent', minimumFractionDigits: 1
 });
 
 export const fmtData = (iso) => {
@@ -23,7 +23,7 @@ export const fmtData = (iso) => {
 };
 
 export const hoje = () => new Date().toISOString().split('T')[0];
-export const mesKey = (ano, mes) => `${ano}-${String(mes+1).padStart(2,'0')}`;
+export const mesKey = (ano, mes) => `${ano}-${String(mes + 1).padStart(2, '0')}`;
 
 export const limparTelefone = (tel) => (tel || '').replace(/\D/g, '');
 
@@ -40,8 +40,8 @@ export const applyMoneyMask = (input) => {
         let v = e.target.value.replace(/\D/g, '');
         if (!v) { e.target.value = ''; return; }
         const n = parseInt(v, 10) / 100;
-        e.target.value = n.toLocaleString('pt-BR', { 
-            minimumFractionDigits: 2, maximumFractionDigits: 2 
+        e.target.value = n.toLocaleString('pt-BR', {
+            minimumFractionDigits: 2, maximumFractionDigits: 2
         });
         e.target.dataset.rawValue = n;
     });
@@ -91,7 +91,7 @@ async function _scheduleSync(lsKey) {
 async function _flushSync() {
     const user = (await supabase.auth.getUser()).data.user;
     if (!user) return;
-    
+
     for (const lsKey of _dirtyKeys) {
         const type = LS_TO_TYPE[lsKey];
         if (!type) continue;
@@ -109,9 +109,9 @@ async function _flushSync() {
 }
 
 function _load(key, def = null) {
-    try { 
-        const v = localStorage.getItem(key); 
-        return v ? JSON.parse(v) : def; 
+    try {
+        const v = localStorage.getItem(key);
+        return v ? JSON.parse(v) : def;
     } catch { return def; }
 }
 
@@ -151,12 +151,12 @@ export const Config = {
 export const Servicos = {
     getAll: () => _load(KEYS.SERVICOS, []),
     save: (arr) => _save(KEYS.SERVICOS, arr),
-    add: (s) => { 
-        const all = Servicos.getAll(); 
-        s.id = Date.now(); 
-        all.push(s); 
-        Servicos.save(all); 
-        return s; 
+    add: (s) => {
+        const all = Servicos.getAll();
+        s.id = Date.now();
+        all.push(s);
+        Servicos.save(all);
+        return s;
     },
     remove: (id) => Servicos.save(Servicos.getAll().filter(s => s.id !== id)),
     byId: (id) => Servicos.getAll().find(s => s.id === id),
@@ -202,7 +202,7 @@ export const Diario = {
         _invalidateClienteCache();
     },
     getByMes: (ano, mesIdx) => {
-        const prefix = `${ano}-${String(mesIdx+1).padStart(2,'0')}`;
+        const prefix = `${ano}-${String(mesIdx + 1).padStart(2, '0')}`;
         return Diario.getAll().filter(e => e.data?.startsWith(prefix));
     },
     resumoMes: (ano, mesIdx) => {
@@ -247,7 +247,17 @@ export const Agenda = {
         const str = new Date().toISOString().slice(0, 10);
         return Agenda.getAll().filter(e => e.data === str && e.status !== 'cancelado')
             .sort((a, b) => (a.horario || '').localeCompare(b.horario || ''));
-    }
+    },
+    update: (id, changes) => {
+        const all = Agenda.getAll();
+        const idx = all.findIndex(e => e.id === id);
+        if (idx >= 0) {
+            all[idx] = { ...all[idx], ...changes };
+            _save(KEYS.AGENDA, all);
+            _invalidateClienteCache();
+        }
+    },
+    save: (arr) => _save(KEYS.AGENDA, arr),
 };
 
 export const Clientes = {
@@ -275,13 +285,13 @@ export const Clientes = {
     calcStats: (nome) => {
         const k = nome.toLowerCase().trim();
         if (_statsCache.has(k)) return _statsCache.get(k);
-        
+
         const registros = Diario.getAll().filter(e => e.cliente?.toLowerCase().trim() === k);
         const agendamentos = Agenda.getAll().filter(e => e.cliente?.toLowerCase().trim() === k);
         const qtd = registros.reduce((s, e) => s + (parseInt(e.qtd) || 1), 0);
         const fat = registros.reduce((s, e) => s + (parseFloat(e.precoCobrado) || 0) * (parseInt(e.qtd) || 1), 0);
         const datas = registros.map(e => e.data).filter(Boolean).sort();
-        
+
         const result = {
             qtdTotal: qtd,
             fat,
@@ -333,10 +343,27 @@ export const Receitas = {
 // ═══════════════════════════════════════════════════════
 // PAGE RENDERERS
 // ═══════════════════════════════════════════════════════
+
+// Animação de contador para KPIs
+function animateCounter(el, from, to, duration = 600, formatter = (v) => v) {
+    if (!el) return;
+    const startTime = performance.now();
+    const easeOut = t => 1 - Math.pow(1 - t, 3);
+
+    const tick = (now) => {
+        const progress = Math.min((now - startTime) / duration, 1);
+        const value = from + (to - from) * easeOut(progress);
+        el.textContent = formatter(value);
+        if (progress < 1) requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+}
+
 const PAGES_RENDER = {
     dashboard: (container) => {
         const cfg = Config.get();
         const now = new Date();
+        const hojeStr = hoje();
         const res = Diario.resumoMes(now.getFullYear(), now.getMonth());
         const retencao = (() => {
             Clientes.syncFromDiarioAgenda();
@@ -350,23 +377,93 @@ const PAGES_RENDER = {
             return { taxa: todos.length ? Math.round((ativos.length / todos.length) * 100) : 0, qtd: ativos.length };
         })();
 
+        // Verificar progresso do onboarding
+        const dismissed = localStorage.getItem('salao_onboarding_dismissed');
+        const onboardingSteps = [
+            { id: 'config', label: 'Configure o nome do seu salão', done: cfg.nomeSalao && cfg.nomeSalao !== 'Meu Salão', action: () => navigateTo('configuracoes') },
+            { id: 'servico', label: 'Cadastre pelo menos um serviço', done: Servicos.getAll().length > 0, action: () => navigateTo('servicos') },
+            { id: 'agenda', label: 'Crie o primeiro agendamento', done: Agenda.getAll().length > 0, action: () => navigateTo('agenda') },
+            { id: 'diario', label: 'Registre o primeiro atendimento', done: Diario.getAll().length > 0, action: () => navigateTo('diario') },
+        ];
+        const stepsFeitos = onboardingSteps.filter(s => s.done).length;
+        const showOnboarding = !dismissed && stepsFeitos < 4;
+
+        const onboardingHTML = showOnboarding ? `
+            <div class="onboarding-banner">
+                <button class="onboarding-dismiss" onclick="localStorage.setItem('salao_onboarding_dismissed','1');this.parentElement.remove();" title="Fechar">✕</button>
+                <h3>Configure seu salão em 4 passos</h3>
+                <p>${stepsFeitos} de 4 passos concluídos</p>
+                <div class="onboarding-progress">
+                    ${onboardingSteps.map((_, i) => `<div class="onboarding-progress-bar ${i < stepsFeitos ? 'done' : ''}"></div>`).join('')}
+                </div>
+                <div class="onboarding-steps" id="onboarding-steps-list">
+                    ${onboardingSteps.map((s, i) => `
+                        <div class="onboarding-step ${s.done ? 'done' : ''}" onclick="window.__onboardingAction(${i})" data-step="${i}">
+                            <div class="onboarding-step-icon">${s.done ? '✓' : (i + 1)}</div>
+                            <span>${s.label}</span>
+                            ${!s.done ? (renderIcon('ChevronRight', { width: 16, height: 16 }) || '') : ''}
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        ` : '';
+
+        // Calcular dados dos últimos 7 dias
+        const ultimos7 = Array.from({ length: 7 }, (_, i) => {
+            const d = new Date();
+            d.setDate(d.getDate() - (6 - i));
+            const str = d.toISOString().slice(0, 10);
+            const dayEntries = Diario.getAll().filter(e => e.data === str);
+            const fat = dayEntries.reduce((s, e) => s + (parseFloat(e.precoCobrado) || 0) * (parseInt(e.qtd) || 1), 0);
+            return { data: str, fat, label: d.toLocaleDateString('pt-BR', { weekday: 'short' }).replace('.', ''), isHoje: str === hojeStr };
+        });
+        const maxFat = Math.max(...ultimos7.map(d => d.fat), 1);
+        const media = ultimos7.reduce((s, d) => s + d.fat, 0) / 7;
+
         container.innerHTML = `
+            ${onboardingHTML}
+
             <div class="grid">
                 <div class="kpi-card">
                     <div class="kpi-label">Faturamento Mês</div>
-                    <div class="kpi-value">${R$(res.faturamento)}</div>
+                    <div class="kpi-value" data-kpi="faturamento">${R$(res.faturamento)}</div>
                 </div>
                 <div class="kpi-card" style="border-left-color: var(--success)">
                     <div class="kpi-label">Lucro Real</div>
-                    <div class="kpi-value" style="color: var(--success)">${R$(res.lucroReal)}</div>
+                    <div class="kpi-value" style="color: var(--success)" data-kpi="lucro">${R$(res.lucroReal)}</div>
                 </div>
                 <div class="kpi-card" style="border-left-color: var(--rose)">
                     <div class="kpi-label">Atendimentos</div>
-                    <div class="kpi-value">${res.atendimentos}</div>
+                    <div class="kpi-value" data-kpi="atendimentos">${res.atendimentos}</div>
                 </div>
                 <div class="kpi-card" style="border-left-color: var(--info)">
                     <div class="kpi-label">Ticket Médio</div>
-                    <div class="kpi-value">${R$(res.ticket)}</div>
+                    <div class="kpi-value" data-kpi="ticket">${R$(res.ticket)}</div>
+                </div>
+            </div>
+
+            <div class="card" style="margin-bottom: 24px;">
+                <h3 style="color: var(--plum); margin-bottom: 16px; font-size: 0.95rem; font-weight: 600;">Últimos 7 dias</h3>
+                <svg width="100%" viewBox="0 0 400 120" style="overflow:visible;">
+                    <line x1="0" y1="${100 - (media / maxFat) * 80}" x2="400" y2="${100 - (media / maxFat) * 80}" stroke="var(--mauve)" stroke-width="1" stroke-dasharray="4 4"/>
+                    ${ultimos7.map((d, i) => {
+            const barH = Math.max(4, (d.fat / maxFat) * 80);
+            const x = 10 + i * 55;
+            const y = 100 - barH;
+            const isAbove = d.fat >= media;
+            return `<g>
+                            <rect x="${x}" y="${y}" width="40" height="${barH}" rx="4"
+                                  fill="${d.isHoje ? 'var(--plum)' : isAbove ? 'var(--success)' : 'var(--mauve)'}"
+                                  opacity="${d.isHoje ? 1 : 0.7}"/>
+                            <text x="${x + 20}" y="115" text-anchor="middle" style="font-size:10px;fill:var(--txt-muted);">${d.label}</text>
+                            ${d.fat > 0 ? `<title>${d.data}: ${R$(d.fat)}</title>` : ''}
+                        </g>`;
+        }).join('')}
+                </svg>
+                <div style="display:flex;gap:16px;margin-top:8px;font-size:0.78rem;color:var(--txt-muted);">
+                    <span>— média: ${R$(media)}</span>
+                    <span style="color:var(--plum)">■ hoje</span>
+                    <span style="color:var(--success)">■ acima da média</span>
                 </div>
             </div>
 
@@ -417,25 +514,64 @@ const PAGES_RENDER = {
                         </div>
                     `).join('')}
                 </div>
+                ${Agenda.getAmanha().filter(a => a.telefone).length > 0 ? `
+                    <button class="btn btn-primary" style="width:100%;margin-top:16px;" onclick="confirmarLoteWA()">
+                        ${renderIcon('MessageCircle', { width: 16, height: 16 })}
+                        Confirmar todos pelo WhatsApp (${Agenda.getAmanha().filter(a => a.telefone).length})
+                    </button>
+                ` : ''}
             </div>
             ` : ''}
         `;
+
+        // Ações do onboarding
+        window.__onboardingAction = (idx) => { onboardingSteps[idx]?.action(); };
+
+        // Confirmar lote WA
+        window.confirmarLoteWA = () => {
+            const comTelefone = Agenda.getAmanha().filter(a => a.telefone);
+            if (!comTelefone.length) { toast('Nenhum agendamento com telefone cadastrado.', 'warning'); return; }
+            let idx = 0;
+            const abrir = () => {
+                if (idx >= comTelefone.length) { toast(`${comTelefone.length} mensagens abertas!`, 'success'); return; }
+                const a = comTelefone[idx];
+                const msg = `Olá ${a.cliente}! Passando para confirmar seu horário amanhã às ${a.horario}. Pode confirmar?`;
+                const url = linkWA(a.telefone, msg);
+                if (url) window.open(url, '_blank');
+                idx++;
+                setTimeout(abrir, 800);
+            };
+            toast(`Abrindo ${comTelefone.length} conversas...`, 'default', 5000);
+            abrir();
+        };
+
+        // Animar KPIs
+        setTimeout(() => {
+            const kpiFat = container.querySelector('[data-kpi="faturamento"]');
+            const kpiLucro = container.querySelector('[data-kpi="lucro"]');
+            const kpiAtend = container.querySelector('[data-kpi="atendimentos"]');
+            const kpiTicket = container.querySelector('[data-kpi="ticket"]');
+            if (kpiFat) animateCounter(kpiFat, 0, res.faturamento, 700, v => R$(v));
+            if (kpiLucro) animateCounter(kpiLucro, 0, res.lucroReal, 700, v => R$(v));
+            if (kpiAtend) animateCounter(kpiAtend, 0, res.atendimentos, 500, v => Math.round(v));
+            if (kpiTicket) animateCounter(kpiTicket, 0, res.ticket, 600, v => R$(v));
+        }, 50);
     },
 
     agenda: (container) => {
         const cfg = Config.get();
         const svcs = Servicos.getAll();
-        
+
         const renderTable = () => {
             const entries = Agenda.getAll().sort((a, b) => (b.data + b.horario).localeCompare(a.data + a.horario));
-            
+
             if (!entries.length) {
                 return `<div class="card" style="text-align: center; padding: 40px; color: var(--txt-muted);">
                     ${renderIcon('Calendar', { width: 48, height: 48, strokeWidth: 1 })}
                     <p style="margin-top: 16px;">Nenhum agendamento encontrado.</p>
                 </div>`;
             }
-            
+
             return `
                 <div class="table-wrap">
                     <table>
@@ -457,7 +593,7 @@ const PAGES_RENDER = {
                                     <td style="font-weight: 600;">${e.cliente}</td>
                                     <td>${e.servicoNome || '-'}</td>
                                     <td>
-                                        <select onchange="Agenda.update(${e.id}, { status: this.value }); renderAgenda();" 
+                                        <select onchange="Agenda.update(${e.id}, { status: this.value }); renderPage('agenda', document.getElementById('page-agenda'));"  
                                                 class="badge" style="border: none; cursor: pointer;">
                                             <option value="agendado" ${e.status === 'agendado' ? 'selected' : ''}>Agendado</option>
                                             <option value="confirmado" ${e.status === 'confirmado' ? 'selected' : ''}>Confirmado</option>
@@ -486,11 +622,11 @@ const PAGES_RENDER = {
                 </div>
             `;
         };
-        
+
         container.innerHTML = `
             <div class="header" style="margin-bottom: 24px;">
                 <h2>Agenda de Horários</h2>
-                <button class="btn btn-primary" onclick="window.__openModal('Novo Agendamento', document.getElementById('tpl-agenda-form').innerHTML)">
+                <button class="btn btn-primary" onclick="window.__openForm('Novo Agendamento', document.getElementById('tpl-agenda-form').innerHTML)">
                     ${renderIcon('Plus', { width: 16, height: 16 })} Novo
                 </button>
             </div>
@@ -521,7 +657,7 @@ const PAGES_RENDER = {
                     </select>
                 </div>
                 <div class="modal-footer" style="padding: 0; margin-top: 20px;">
-                    <button class="btn btn-secondary" onclick="window.__closeModal()">Cancelar</button>
+                    <button class="btn btn-secondary" onclick="window.__closeForm()">Cancelar</button>
                     <button class="btn btn-primary" onclick="
                         const s = document.getElementById('ag-servico');
                         Agenda.add({
@@ -533,14 +669,14 @@ const PAGES_RENDER = {
                             servicoNome: s.options[s.selectedIndex].dataset.nome,
                             status: 'agendado'
                         });
-                        window.__closeModal();
+                        window.__closeForm();
                         renderPage('agenda', document.getElementById('page-agenda'));
                         toast('Agendamento criado!');
                     ">Salvar</button>
                 </div>
             </template>
         `;
-        
+
         // Expose Agenda to window for inline handlers
         window.Agenda = Agenda;
     },
@@ -550,11 +686,11 @@ const PAGES_RENDER = {
         const svcs = Servicos.getAll();
         const prods = Produtos.getAll();
         const profs = cfg.profissionais;
-        
+
         const hojeStr = hoje();
         const entries = Diario.getAll().filter(e => e.data === hojeStr);
         const total = entries.reduce((s, e) => s + (parseFloat(e.precoCobrado) || 0), 0);
-        
+
         container.innerHTML = `
             <div class="header" style="margin-bottom: 24px;">
                 <div>
@@ -610,7 +746,7 @@ const PAGES_RENDER = {
                 
                 <div>
                     <button class="btn btn-primary" style="width: 100%; margin-bottom: 16px;" 
-                            onclick="window.__openModal('Novo Lançamento', document.getElementById('tpl-diario-form').innerHTML);
+                            onclick="window.__openForm('Novo Lançamento', document.getElementById('tpl-diario-form').innerHTML);
                                      setTimeout(() => applyMoneyMask(document.getElementById('dv-valor')), 100);">
                         ${renderIcon('Plus', { width: 16, height: 16 })} Novo Lançamento
                     </button>
@@ -676,7 +812,7 @@ const PAGES_RENDER = {
                     </select>
                 </div>
                 <div class="modal-footer" style="padding: 0; margin-top: 20px;">
-                    <button class="btn btn-secondary" onclick="window.__closeModal()">Cancelar</button>
+                    <button class="btn btn-secondary" onclick="window.__closeForm()">Cancelar</button>
                     <button class="btn btn-primary" onclick="
                         const tipo = document.getElementById('dv-tipo').value;
                         const isServ = tipo === 'servico';
@@ -700,14 +836,14 @@ const PAGES_RENDER = {
                         
                         if (!isServ && item) Produtos.baixarEstoque(item.id, 1);
                         
-                        window.__closeModal();
+                        window.__closeForm();
                         renderPage('diario', document.getElementById('page-diario'));
                         toast('Lançamento salvo!');
                     ">Salvar</button>
                 </div>
             </template>
         `;
-        
+
         window.Diario = Diario;
         window.Servicos = Servicos;
         window.Produtos = Produtos;
@@ -716,15 +852,15 @@ const PAGES_RENDER = {
     servicos: (container) => {
         const svcs = Servicos.getAll();
         const prods = Produtos.getAll();
-        
+
         container.innerHTML = `
             <div class="header" style="margin-bottom: 24px;">
                 <h2>Catálogo</h2>
                 <div style="display: flex; gap: 12px;">
-                    <button class="btn btn-primary" onclick="window.__openModal('Novo Serviço', document.getElementById('tpl-svc-form').innerHTML)">
+                    <button class="btn btn-primary" onclick="window.__openForm('Novo Serviço', document.getElementById('tpl-svc-form').innerHTML)">
                         ${renderIcon('Plus', { width: 16, height: 16 })} Serviço
                     </button>
-                    <button class="btn btn-secondary" onclick="window.__openModal('Novo Produto', document.getElementById('tpl-prod-form').innerHTML)">
+                    <button class="btn btn-secondary" onclick="window.__openForm('Novo Produto', document.getElementById('tpl-prod-form').innerHTML)">
                         ${renderIcon('Package', { width: 16, height: 16 })} Produto
                     </button>
                 </div>
@@ -784,7 +920,7 @@ const PAGES_RENDER = {
                 <div class="form-group"><label>Preço Ideal</label><input type="number" id="s-preco" step="0.01"></div>
                 <div class="form-group"><label>Custo Estimado</label><input type="number" id="s-custo" step="0.01"></div>
                 <div class="modal-footer" style="padding: 0; margin-top: 20px;">
-                    <button class="btn btn-secondary" onclick="window.__closeModal()">Cancelar</button>
+                    <button class="btn btn-secondary" onclick="window.__closeForm()">Cancelar</button>
                     <button class="btn btn-primary" onclick="
                         Servicos.add({
                             nome: document.getElementById('s-nome').value,
@@ -792,7 +928,7 @@ const PAGES_RENDER = {
                             precoIdeal: parseFloat(document.getElementById('s-preco').value) || 0,
                             custoTotal: parseFloat(document.getElementById('s-custo').value) || 0
                         });
-                        window.__closeModal();
+                        window.__closeForm();
                         renderPage('servicos', document.getElementById('page-servicos'));
                         toast('Serviço cadastrado!');
                     ">Salvar</button>
@@ -806,7 +942,7 @@ const PAGES_RENDER = {
                 <div class="form-group"><label>Estoque</label><input type="number" id="p-estoque" value="0"></div>
                 <div class="form-group"><label>Estoque Mínimo</label><input type="number" id="p-min" value="2"></div>
                 <div class="modal-footer" style="padding: 0; margin-top: 20px;">
-                    <button class="btn btn-secondary" onclick="window.__closeModal()">Cancelar</button>
+                    <button class="btn btn-secondary" onclick="window.__closeForm()">Cancelar</button>
                     <button class="btn btn-primary" onclick="
                         Produtos.add({
                             nome: document.getElementById('p-nome').value,
@@ -815,14 +951,14 @@ const PAGES_RENDER = {
                             estoque: parseInt(document.getElementById('p-estoque').value) || 0,
                             estoqueMin: parseInt(document.getElementById('p-min').value) || 2
                         });
-                        window.__closeModal();
+                        window.__closeForm();
                         renderPage('servicos', document.getElementById('page-servicos'));
                         toast('Produto cadastrado!');
                     ">Salvar</button>
                 </div>
             </template>
         `;
-        
+
         window.Servicos = Servicos;
         window.Produtos = Produtos;
     },
@@ -830,7 +966,7 @@ const PAGES_RENDER = {
     clientes: (container) => {
         Clientes.syncFromDiarioAgenda();
         const clientes = Clientes.getAll();
-        
+
         const calcSeg = (stats) => {
             if (!stats.ultimaVisita) return { label: 'Nova', color: 'var(--info)' };
             const dias = Math.floor((Date.now() - new Date(stats.ultimaVisita + 'T12:00:00').getTime()) / 86400000);
@@ -839,7 +975,7 @@ const PAGES_RENDER = {
             if (stats.qtdTotal >= 5) return { label: 'Fiel', color: 'var(--success)' };
             return { label: 'Regular', color: 'var(--plum)' };
         };
-        
+
         container.innerHTML = `
             <div class="header" style="margin-bottom: 24px;">
                 <h2>CRM de Clientes</h2>
@@ -848,9 +984,9 @@ const PAGES_RENDER = {
             
             <div class="grid" style="grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));">
                 ${clientes.map(c => {
-                    const stats = Clientes.calcStats(c.nome);
-                    const seg = calcSeg(stats);
-                    return `
+            const stats = Clientes.calcStats(c.nome);
+            const seg = calcSeg(stats);
+            return `
                         <div class="card" style="position: relative;">
                             <div style="position: absolute; top: 16px; right: 16px;">
                                 <span style="background: ${seg.color}; color: white; padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 600;">
@@ -883,10 +1019,10 @@ const PAGES_RENDER = {
                             ` : ''}
                         </div>
                     `;
-                }).join('')}
+        }).join('')}
             </div>
         `;
-        
+
         window.Clientes = Clientes;
     },
 
@@ -896,7 +1032,7 @@ const PAGES_RENDER = {
         const key = mesKey(cfg.ano, mesAtual);
         const data = Custos.getMes(key);
         const total = Custos.totalMes(key);
-        
+
         container.innerHTML = `
             <div class="header" style="margin-bottom: 24px;">
                 <h2>Custos Fixos</h2>
@@ -920,7 +1056,7 @@ const PAGES_RENDER = {
                 </div>
             </div>
         `;
-        
+
         window.Custos = Custos;
     },
 
@@ -931,7 +1067,7 @@ const PAGES_RENDER = {
         const data = Receitas.getMes(key);
         const total = Receitas.totalMes(key);
         const cfReal = Receitas.custoFixoRealMes(key);
-        
+
         container.innerHTML = `
             <div class="header" style="margin-bottom: 24px;">
                 <h2>Receitas do Espaço</h2>
@@ -960,7 +1096,7 @@ const PAGES_RENDER = {
                 </div>
             </div>
         `;
-        
+
         window.Receitas = Receitas;
     },
 
@@ -971,7 +1107,7 @@ const PAGES_RENDER = {
             const r = Diario.resumoMes(cfg.ano, i);
             return { mes: m, ...r };
         });
-        
+
         container.innerHTML = `
             <div class="header" style="margin-bottom: 24px;">
                 <h2>Controle Anual ${cfg.ano}</h2>
@@ -1010,15 +1146,15 @@ const PAGES_RENDER = {
                 <h3 style="color: var(--plum); margin-bottom: 16px;">Gráfico de Faturamento</h3>
                 <div style="display: flex; align-items: flex-end; justify-content: space-between; height: 200px; padding: 20px 0; gap: 8px;">
                     ${dados.map(d => {
-                        const max = Math.max(...dados.map(x => x.faturamento || 0)) || 1;
-                        const h = (d.faturamento || 0) / max * 100;
-                        return `
+            const max = Math.max(...dados.map(x => x.faturamento || 0)) || 1;
+            const h = (d.faturamento || 0) / max * 100;
+            return `
                             <div style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 8px;">
                                 <div style="width: 100%; height: ${Math.max(h, 5)}px; background: linear-gradient(180deg, var(--plum), var(--rose)); border-radius: 4px 4px 0 0; min-height: 4px;"></div>
                                 <span style="font-size: 0.75rem; color: var(--txt-muted);">${d.mes}</span>
                             </div>
                         `;
-                    }).join('')}
+        }).join('')}
                 </div>
             </div>
         `;
@@ -1026,7 +1162,7 @@ const PAGES_RENDER = {
 
     configuracoes: (container) => {
         const cfg = Config.get();
-        
+
         container.innerHTML = `
             <div class="header" style="margin-bottom: 24px;">
                 <h2>Configurações</h2>
@@ -1079,12 +1215,12 @@ const PAGES_RENDER = {
             <div class="card" style="margin-top: 24px; border: 2px solid var(--danger);">
                 <h3 style="color: var(--danger); margin-bottom: 16px;">Zona de Perigo</h3>
                 <p style="color: var(--txt-muted); margin-bottom: 16px;">Atenção: estas ações não podem ser desfeitas.</p>
-                <button class="btn btn-danger" onclick="if(confirm('Limpar TODOS os dados?')) { localStorage.clear(); location.reload(); }">
+                <button class="btn btn-danger" onclick="window.__confirmDelete('Limpar TODOS os dados? Esta ação é irreversível.', () => { localStorage.clear(); location.reload(); }, 'Limpar Tudo')">
                     ${renderIcon('Trash2', { width: 16, height: 16 })} Limpar Todos os Dados
                 </button>
             </div>
         `;
-        
+
         window.Config = Config;
     }
 };
