@@ -10,8 +10,8 @@ import {
 // ═══════════════════════════════════════════════════════
 // CONFIGURAÇÃO SUPABASE (Multi-tenant)
 // ═══════════════════════════════════════════════════════
-const SUPABASE_URL = 'https://wjuooblxcczmbdaxuqhj.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_iiKZubiCAW9X2LdCliM7Lw_8Z1cA_2B';
+const SUPABASE_URL = 'https://dcmamtwcqqehcldsxaxx.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_a805rtX0y4wKuE6HupJWNw_90SN06wa';
 
 export const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
     auth: {
