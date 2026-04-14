@@ -1,10 +1,5 @@
-// ═══════════════════════════════════════════════════════
-// supabase/functions/telegram-bot/index.ts
-// Bot Telegram — Fase 1: apenas fallbacks hardcoded.
-// Sem IA. Sem alucinação. Dados reais do Supabase.
-// Deploy: supabase functions deploy telegram-bot
-// ═══════════════════════════════════════════════════════
 
+<<<<<<< HEAD
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -438,3 +433,5 @@ function _resumoCaixa(entries: DiarioItem[], dataStr: string, label: string): st
 function match(texto: string, termos: string[]): boolean {
     return termos.some(t => texto.includes(t));
 }
+=======
+>>>>>>> c64922ea543a091756dbc14b19a87785a9cbfb97

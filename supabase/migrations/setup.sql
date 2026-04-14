@@ -1,8 +1,5 @@
--- ═══════════════════════════════════════════════════════
--- setup.sql — Migrations para Fase 1 (Bot Telegram)
--- Execute no SQL Editor do Supabase (em ordem)
--- ═══════════════════════════════════════════════════════
 
+<<<<<<< HEAD
 -- 1. Tabela de perfis (vincula user_id ↔ telegram_chat_id)
 CREATE TABLE IF NOT EXISTS profiles (
     user_id     uuid PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -183,3 +180,5 @@ CREATE POLICY "token_leitura_autenticado" ON telegram_link_tokens
 CREATE POLICY "token_delete_autenticado" ON telegram_link_tokens
     FOR DELETE USING (true);
 
+=======
+>>>>>>> c64922ea543a091756dbc14b19a87785a9cbfb97
