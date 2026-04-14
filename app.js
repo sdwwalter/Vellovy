@@ -10,8 +10,8 @@ import {
 // ═══════════════════════════════════════════════════════
 // CONFIGURAÇÃO SUPABASE (Multi-tenant)
 // ═══════════════════════════════════════════════════════
-const SUPABASE_URL = 'https://dcmamtwcqqehcldsxaxx.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_a805rtX0y4wKuE6HupJWNw_90SN06wa';
+const SUPABASE_URL = 'https://lwixchmkfadjrwviysjd.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_7jge9BS8rvFKKmn5bktiQg_HouidPXa';
 
 export const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
     auth: {
@@ -69,7 +69,7 @@ const PAGES = {
     custos: { icon: 'CreditCard', title: 'Custos Fixos' },
     receitas: { icon: 'TrendingUp', title: 'Receitas' },
     controle: { icon: 'BarChart3', title: 'Controle Anual' },
-    relatorio: { icon: 'BarChart3', title: 'Relatório Mensal' },
+    relatorio: { icon: 'TrendingUp', title: 'Relatório Mensal' },
     configuracoes: { icon: 'Settings', title: 'Configurações' }
 };
 
@@ -633,6 +633,7 @@ async function initApp(user) {
             '4': 'clientes',
             '5': 'servicos',
             '6': 'controle',
+            '7': 'relatorio',
             '9': 'configuracoes',
             'Escape': () => { window.__closeModal(); window.__closeSheet(); },
         };
@@ -648,7 +649,7 @@ async function initApp(user) {
         if (e.key === '?') {
             window.__openModal('Atalhos de Teclado', `
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:0.9rem;">
-                    ${Object.entries({ '1': 'Dashboard', '2': 'Agenda', '3': 'Diário', '4': 'Clientes', '5': 'Serviços', '6': 'Controle', '9': 'Configurações', 'Esc': 'Fechar modal', '?': 'Este menu' }).map(([k, v]) => `
+                    ${Object.entries({ '1': 'Dashboard', '2': 'Agenda', '3': 'Diário', '4': 'Clientes', '5': 'Serviços', '6': 'Controle Anual', '7': 'Relatório Mensal', '9': 'Configurações', 'Esc': 'Fechar modal', '?': 'Este menu' }).map(([k, v]) => `
                         <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--mauve);">
                             <span style="color:var(--txt-muted)">${v}</span>
                             <kbd style="background:var(--mauve);padding:2px 8px;border-radius:4px;font-family:monospace;font-size:0.85rem;">${k}</kbd>

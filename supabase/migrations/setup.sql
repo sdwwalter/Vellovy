@@ -132,3 +132,54 @@ VARIÁVEIS NECESSÁRIAS NO SUPABASE SECRETS
   SUPABASE_SERVICE_ROLE_KEY   → Project Settings > API > service_role
   (SUPABASE_URL já é injetado automaticamente nas Edge Functions)
 */
+
+-- ═══════════════════════════════════════════════════════
+-- 4. Tabela principal de dados do salão (multi-tenant)
+-- ═══════════════════════════════════════════════════════
+-- Armazena todas as entidades (config, agenda, diario,
+-- servicos, clientes, custos, receitas, produtos) como
+-- documentos JSON, uma linha por (user_id, data_type).
+
+CREATE TABLE IF NOT EXISTS salao_data (
+    id          bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    user_id     uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    data_type   text NOT NULL,   -- 'config' | 'agenda' | 'diario' | 'servicos' |
+                                 -- 'clientes' | 'custos' | 'receitas' | 'produtos'
+    data        jsonb NOT NULL DEFAULT '[]'::jsonb,
+    updated_at  timestamp with time zone DEFAULT now(),
+    CONSTRAINT salao_data_user_type_uq UNIQUE (user_id, data_type)
+);
+
+CREATE INDEX IF NOT EXISTS salao_data_user_idx ON salao_data (user_id);
+
+ALTER TABLE salao_data ENABLE ROW LEVEL SECURITY;
+
+-- Usuário acessa apenas seus próprios dados
+CREATE POLICY "salao_data_proprio" ON salao_data
+    FOR ALL USING (auth.uid() = user_id);
+
+-- Trigger: atualiza updated_at automaticamente
+CREATE OR REPLACE FUNCTION set_updated_at()
+RETURNS TRIGGER LANGUAGE plpgsql AS $$
+BEGIN
+    NEW.updated_at = now();
+    RETURN NEW;
+END;
+$$;
+
+CREATE OR REPLACE TRIGGER salao_data_updated_at
+    BEFORE UPDATE ON salao_data
+    FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+
+
+-- ═══════════════════════════════════════════════════════
+-- 5. Policy complementar: front-end lê/exclui o próprio
+--    token de vínculo (fluxo Configurações > Bot Telegram)
+-- ═══════════════════════════════════════════════════════
+
+CREATE POLICY "token_leitura_autenticado" ON telegram_link_tokens
+    FOR SELECT USING (true);
+
+CREATE POLICY "token_delete_autenticado" ON telegram_link_tokens
+    FOR DELETE USING (true);
+

@@ -11,9 +11,9 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 // ─────────────────────────────────────────────────────
 // ENV (configurados via: supabase secrets set ...)
 // ─────────────────────────────────────────────────────
-const TELEGRAM_TOKEN   = Deno.env.get("TELEGRAM_BOT_TOKEN")!;
-const SUPABASE_URL     = Deno.env.get("SUPABASE_URL")!;
-const SUPABASE_SRK     = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const TELEGRAM_TOKEN = Deno.env.get("TELEGRAM_BOT_TOKEN")!;
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+const SUPABASE_SRK = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
 // ─────────────────────────────────────────────────────
 // TIPOS
@@ -96,7 +96,7 @@ serve(async (req) => {
 // ─────────────────────────────────────────────────────
 async function handleMessage(message: TelegramMessage, supabase: ReturnType<typeof createClient>) {
     const chatId = message.chat.id;
-    const texto  = (message.text || "").trim();
+    const texto = (message.text || "").trim();
 
     // 1. Identifica usuário pelo telegram_chat_id
     const { data: profile } = await supabase
@@ -149,19 +149,19 @@ function dispatch(texto: string, dados: SalaoData): string {
     const t = texto.toLowerCase().trim()
         .normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
-    if (t === "/start" || t === "start")            return cmdAjuda();
-    if (match(t, ["ajuda", "help", "comandos"]))    return cmdAjuda();
-    if (match(t, ["resumo", "briefing"]))           return cmdResumo(dados);
+    if (t === "/start" || t === "start") return cmdAjuda();
+    if (match(t, ["ajuda", "help", "comandos"])) return cmdAjuda();
+    if (match(t, ["resumo", "briefing"])) return cmdResumo(dados);
 
     // Agenda
-    if (match(t, ["agenda hoje", "hoje"]))          return cmdAgendaHoje(dados);
-    if (match(t, ["agenda amanha", "amanha"]))      return cmdAgendaAmanha(dados);
-    if (match(t, ["proximos", "agenda proximos"]))  return cmdAgendaProximos(dados);
+    if (match(t, ["agenda hoje", "hoje"])) return cmdAgendaHoje(dados);
+    if (match(t, ["agenda amanha", "amanha"])) return cmdAgendaAmanha(dados);
+    if (match(t, ["proximos", "agenda proximos"])) return cmdAgendaProximos(dados);
 
     // Caixa
     if (match(t, ["caixa hoje", "faturamento hoje", "quanto fiz hoje"])) return cmdCaixaHoje(dados);
     if (match(t, ["caixa ontem", "faturamento ontem", "quanto fiz ontem"])) return cmdCaixaOntem(dados);
-    if (match(t, ["semana", "essa semana"]))        return cmdSemana(dados);
+    if (match(t, ["semana", "essa semana"])) return cmdSemana(dados);
     if (match(t, ["mes", "esse mes", "resumo mes"])) return cmdMes(dados);
 
     // Clientes
