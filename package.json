@@ -1,0 +1,14 @@
+{
+  "name": "vellovy",
+  "private": true,
+  "workspaces": ["apps/*", "packages/*"],
+  "scripts": {
+    "dev": "npm run dev --workspace=apps/web",
+    "build": "npm run build --workspace=apps/web",
+    "lint": "npm run lint --workspace=apps/web",
+    "typecheck": "npx tsc --noEmit --workspace=apps/web"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
