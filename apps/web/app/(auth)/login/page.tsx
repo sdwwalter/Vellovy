@@ -48,7 +48,10 @@ export default function LoginPage() {
     const supabase = createClient();
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: `${window.location.origin}/agenda` },
+      options: {
+        // Redireciona para o callback que troca o code PKCE por sessão
+        redirectTo: `${window.location.origin}/auth/callback?next=/agenda`,
+      },
     });
     if (error) toast.error(error.message);
   };

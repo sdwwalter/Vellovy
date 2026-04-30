@@ -105,15 +105,14 @@ export const useFinanceiroStore = create<FinanceiroState>()(
             receita_servicos: receitaTotal,
             receita_produtos: 0,
             receita_total: receitaTotal,
-            despesas_operacionais: despesasTotal,
+            despesas_fixas: despesasTotal,
+            despesas_variaveis: 0,
             despesas_total: despesasTotal,
-            impostos: 0,
-            taxas_cartao: 0,
-            repasses_profissionais: repassesTotal,
             repasses_total: repassesTotal,
             lucro_bruto: lucroBruto,
             lucro_liquido: lucroLiquido,
             margem_lucro: margem,
+            ticket_medio: 0,
             total_atendimentos: 0,
           };
 

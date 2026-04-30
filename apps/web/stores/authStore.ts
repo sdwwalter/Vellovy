@@ -1,7 +1,7 @@
 // apps/web/stores/authStore.ts
 import { create } from 'zustand';
 import { createClient } from '@/lib/supabase/client';
-import { User } from '@supabase/supabase-js';
+import type { User } from '@supabase/supabase-js';
 
 interface AuthStore {
   user: User | null;
@@ -9,7 +9,7 @@ interface AuthStore {
   role: 'owner' | 'profissional' | 'recepcionista' | null;
   profissionalId: string | null;
   isLoading: boolean;
-  
+
   loadSession: () => Promise<void>;
   signOut: () => Promise<void>;
 }
@@ -25,9 +25,11 @@ export const useAuthStore = create<AuthStore>((set) => ({
     set({ isLoading: true });
     try {
       const supabase = createClient();
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session?.user) {
+
+      // Usar getUser() — valida JWT no servidor (mais seguro que getSession())
+      const { data: { user }, error } = await supabase.auth.getUser();
+
+      if (error || !user) {
         set({ user: null, salaoId: null, role: null, profissionalId: null, isLoading: false });
         return;
       }
@@ -35,19 +37,19 @@ export const useAuthStore = create<AuthStore>((set) => ({
       const { data: membro } = await supabase
         .from('membros_salao')
         .select('salao_id, role, profissional_id')
-        .eq('user_id', session.user.id)
+        .eq('user_id', user.id)
         .eq('ativo', true)
         .single();
 
       set({
-        user: session.user,
-        salaoId: membro?.salao_id || null,
-        role: membro?.role || 'owner', // Default fallback para migração
-        profissionalId: membro?.profissional_id || null,
-        isLoading: false
+        user,
+        salaoId: membro?.salao_id ?? null,
+        role: (membro?.role as AuthStore['role']) ?? 'owner',
+        profissionalId: membro?.profissional_id ?? null,
+        isLoading: false,
       });
     } catch (error) {
-      console.error('Error loading session:', error);
+      console.error('[authStore] Erro ao carregar sessão:', error);
       set({ isLoading: false });
     }
   },
@@ -55,6 +57,8 @@ export const useAuthStore = create<AuthStore>((set) => ({
   signOut: async () => {
     const supabase = createClient();
     await supabase.auth.signOut();
-    set({ user: null, salaoId: null, role: null, profissionalId: null });
-  }
+    set({ user: null, salaoId: null, role: null, profissionalId: null, isLoading: false });
+    // Redirecionar para login e limpar todo o estado do router
+    window.location.href = '/login';
+  },
 }));
