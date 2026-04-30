@@ -198,8 +198,8 @@ function SecaoGamificacao() {
       <PremiumCard padding="lg">
         <div className="space-y-4">
           <Toggle checked={gamificacaoAtiva} onChange={setGamificacaoAtiva} label="Sistema de pontos" desc="Ganhe pontos por ações no salão" />
-          <Toggle checked={true} onChange={() => {}} label="Celebrações sonoras" desc="Som ao ganhar badge ou subir nível" />
-          <Toggle checked={true} onChange={() => {}} label="Toast de pontos" desc="Notificação visual ao ganhar pontos" />
+          <Toggle checked={true} onChange={() => { }} label="Celebrações sonoras" desc="Som ao ganhar badge ou subir nível" />
+          <Toggle checked={true} onChange={() => { }} label="Toast de pontos" desc="Notificação visual ao ganhar pontos" />
           <PremiumButton onClick={() => toast.success("Salvo ✅")} leftIcon={<Save size={14} />} className="w-full">Salvar</PremiumButton>
         </div>
       </PremiumCard>
