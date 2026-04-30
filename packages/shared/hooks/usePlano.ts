@@ -1,11 +1,5 @@
 import type { PlanoSalao, PlanoId } from '../types';
 
-// ============================================================
-// usePlano — @vellovy/shared/hooks/usePlano
-// Hook base (sem dependências de framework) para lógica de planos.
-// O apps/web envolve isso com React Query para reatividade.
-// ============================================================
-
 export interface PlanoInfo {
   plano: PlanoId;
   profissionais_max: number;
@@ -40,11 +34,11 @@ export function temRecurso(
  */
 export function getPlanoLabel(planoId: PlanoId): string {
   const labels: Record<PlanoId, string> = {
-    free:          'Free',
-    essencial:     'Essencial',
-    profissional:  'Profissional',
-    premium:       'Premium',
-    ilimitado:     'Ilimitado',
+    free: 'Free',
+    essencial: 'Essencial',
+    profissional: 'Profissional',
+    premium: 'Premium',
+    ilimitado: 'Ilimitado',
   };
   return labels[planoId] ?? planoId;
 }
@@ -54,14 +48,11 @@ export function getPlanoLabel(planoId: PlanoId): string {
  */
 export function parsePlanoInfo(plano: PlanoSalao): PlanoInfo {
   return {
-    plano:             plano.plano,
+    plano: plano.plano,
     profissionais_max: plano.profissionais_max,
-    tem_bot_telegram:  plano.tem_bot_telegram,
-    tem_whatsapp_api:  plano.tem_whatsapp_api,
-    tem_relatorios:    plano.plano !== 'free',
-    status:            plano.status,
+    tem_bot_telegram: plano.tem_bot_telegram,
+    tem_whatsapp_api: plano.tem_whatsapp_api,
+    tem_relatorios: plano.plano !== 'free',
+    status: plano.status,
   };
 }
-
-// Re-export para uso em apps/web como hook React completo
-export { podeCriarProfissional as usePlano };

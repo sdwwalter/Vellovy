@@ -1,30 +1,52 @@
-// apps/web/hooks/usePlano.ts
 "use client";
 
-import { useMemo } from 'react';
-import { usePlano as usePlanoBase } from '@vellovy/shared/hooks/usePlano';
+import { useState, useEffect } from 'react';
+import {
+  parsePlanoInfo,
+  podeCriarProfissional as checkPodeCriar,
+  type PlanoInfo,
+} from '@vellovy/shared/hooks/usePlano';
 import { createClient } from '@/lib/supabase/client';
 import { useAuthStore } from '@/stores/authStore';
 
-// ✅ Correto: Interface exata recomendada pelo Claude
 interface UsePlanoReturn {
   plano: string | null;
+  planoInfo: PlanoInfo | null;
   loading: boolean;
-  podeCriarProfissional: boolean;
+  podeCriarProfissional: (quantidadeAtual: number) => boolean;
 }
 
 export function usePlano(): UsePlanoReturn {
   const { salaoId } = useAuthStore();
-  const supabase = useMemo(() => createClient(), []);
+  const [planoInfo, setPlanoInfo] = useState<PlanoInfo | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  // Chama a lógica do hook base
-  // O "as any" previne que o TS trave aqui caso o shared esteja retornando boolean por engano
-  const baseResult = usePlanoBase(supabase, salaoId) as any;
+  useEffect(() => {
+    if (!salaoId) {
+      setLoading(false);
+      return;
+    }
 
-  // ✅ Retorno explícito do objeto exigido pelo Claude
+    const supabase = createClient();
+
+    supabase
+      .from('planos_salao')
+      .select('*')
+      .eq('salao_id', salaoId)
+      .single()
+      .then(({ data, error }) => {
+        if (!error && data) {
+          setPlanoInfo(parsePlanoInfo(data));
+        }
+        setLoading(false);
+      });
+  }, [salaoId]);
+
   return {
-    plano: baseResult?.plano ?? null,
-    loading: baseResult?.loading ?? false,
-    podeCriarProfissional: baseResult?.podeCriarProfissional ?? false,
+    plano: planoInfo?.plano ?? null,
+    planoInfo,
+    loading,
+    podeCriarProfissional: (quantidadeAtual: number) =>
+      planoInfo ? checkPodeCriar(planoInfo, quantidadeAtual) : false,
   };
 }
