@@ -1,0 +1,30 @@
+{
+  "name": "@vellovy/shared",
+  "version": "0.1.0",
+  "private": true,
+  "main": "./index.ts",
+  "types": "./index.ts",
+  "exports": {
+    ".": "./index.ts",
+    "./types": "./types/index.ts",
+    "./lib/constants": "./lib/constants.ts",
+    "./lib/formatters": "./lib/formatters.ts",
+    "./lib/segmentacao": "./lib/segmentacao.ts",
+    "./lib/precificacao": "./lib/precificacao.ts",
+    "./lib/supabase/client": "./lib/supabase/client.ts",
+    "./lib/supabase/queries/agenda": "./lib/supabase/queries/agenda.ts",
+    "./lib/supabase/queries/caixa": "./lib/supabase/queries/caixa.ts",
+    "./lib/supabase/queries/clientes": "./lib/supabase/queries/clientes.ts",
+    "./lib/supabase/queries/dashboard": "./lib/supabase/queries/dashboard.ts",
+    "./lib/supabase/queries/financeiro": "./lib/supabase/queries/financeiro.ts",
+    "./lib/supabase/queries/gamificacao": "./lib/supabase/queries/gamificacao.ts",
+    "./lib/supabase/queries/servicos": "./lib/supabase/queries/servicos.ts",
+    "./hooks/usePlano": "./hooks/usePlano.ts"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}

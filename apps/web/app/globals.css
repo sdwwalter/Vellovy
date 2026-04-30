@@ -1,0 +1,216 @@
+@import "tailwindcss";
+
+/* ═══════════════════════════════════════════════════════════════
+   VELLOVY DESIGN SYSTEM — Plum + Rose
+   Tailwind v4 theme tokens via @theme inline
+   ═══════════════════════════════════════════════════════════════ */
+
+@theme inline {
+  /* ─── Brand Primária: Plum ─────────────────────────────── */
+  --color-primary-50:  #F5F0FF;
+  --color-primary-100: #EDE0FF;
+  --color-primary-200: #D9C0FF;
+  --color-primary-300: #BB8FEF;
+  --color-primary-400: #7B4F8E;
+  --color-primary-500: #6A3D7A;
+  --color-primary-600: #572F65;
+  --color-primary-700: #432250;
+  --color-primary-800: #2C1654;
+  --color-primary-900: #1A0B35;
+
+  /* ─── Brand Secundária: Rose ───────────────────────────── */
+  --color-rose-50:  #FFF5F8;
+  --color-rose-100: #FFE8EF;
+  --color-rose-200: #FFD0DF;
+  --color-rose-300: #F4A7BC;
+  --color-rose-400: #C4879A;
+  --color-rose-500: #B0707F;
+  --color-rose-600: #955A6A;
+  --color-rose-700: #7A4556;
+  --color-rose-800: #5E3040;
+  --color-rose-900: #3D1E2A;
+
+  /* ─── Neutros ──────────────────────────────────────────── */
+  --color-neutral-0:   #FFFFFF;
+  --color-neutral-50:  #FAFAFA;
+  --color-neutral-100: #F4F4F5;
+  --color-neutral-200: #E4E4E7;
+  --color-neutral-300: #D1D1D6;
+  --color-neutral-400: #A1A1AA;
+  --color-neutral-500: #71717A;
+  --color-neutral-600: #52525B;
+  --color-neutral-700: #3F3F46;
+  --color-neutral-800: #27272A;
+  --color-neutral-900: #18181B;
+
+  /* ─── Semântica ────────────────────────────────────────── */
+  --color-success: #10B981;
+  --color-warning: #F59E0B;
+  --color-error:   #EF4444;
+  --color-info:    #3B82F6;
+
+  /* ─── Superfícies ──────────────────────────────────────── */
+  --color-surface-page: #FAFAFA;
+  --color-surface-card: #FFFFFF;
+  --color-surface-soft: #FAF8FF;
+
+  /* ─── Texto ────────────────────────────────────────────── */
+  --color-text-primary:   #2C1654;
+  --color-text-secondary: #6B5B7A;
+  --color-text-disabled:  #A1A1AA;
+  --color-text-inverse:   #FFFFFF;
+
+  /* ─── Tipografia ───────────────────────────────────────── */
+  --font-display: "Playfair Display", Georgia, serif;
+  --font-body:    "DM Sans", system-ui, sans-serif;
+  --font-mono:    "Fira Code", monospace;
+
+  /* ─── Sombras ──────────────────────────────────────────── */
+  --shadow-premium: 0 4px 24px -4px rgba(123, 79, 142, 0.18);
+  --shadow-glow:    0 0 20px rgba(123, 79, 142, 0.15);
+
+  /* ─── Breakpoints ──────────────────────────────────────── */
+  --breakpoint-mobile:  375px;
+  --breakpoint-tablet:  768px;
+  --breakpoint-desktop: 1024px;
+  --breakpoint-wide:    1440px;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   BASE STYLES
+   ═══════════════════════════════════════════════════════════════ */
+
+@layer base {
+  :root {
+    --background: var(--color-surface-page);
+    --foreground: var(--color-text-primary);
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    background: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Focus ring acessível */
+  *:focus-visible {
+    outline: 2px solid var(--color-primary-400);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  /* Touch targets mínimo 48px em mobile */
+  @media (max-width: 767px) {
+    button,
+    a,
+    [role="button"],
+    input[type="checkbox"],
+    input[type="radio"] {
+      min-height: 48px;
+      min-width: 48px;
+    }
+  }
+
+  /* Scrollbar estilizada */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: var(--color-neutral-100);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-neutral-300);
+    border-radius: 999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--color-neutral-400);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   COMPONENT UTILITIES
+   ═══════════════════════════════════════════════════════════════ */
+
+@layer utilities {
+  .text-gradient-plum {
+    background: linear-gradient(135deg, var(--color-primary-400), var(--color-primary-300));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .text-gradient-rose {
+    background: linear-gradient(135deg, var(--color-rose-400), var(--color-rose-300));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .bg-gradient-noir {
+    background: linear-gradient(180deg, var(--color-primary-800) 0%, var(--color-primary-900) 100%);
+  }
+
+  .bg-gradient-plum {
+    background: linear-gradient(135deg, var(--color-primary-500), var(--color-primary-300));
+  }
+
+  .bg-gradient-hero {
+    background: linear-gradient(135deg, var(--color-primary-800), var(--color-primary-600));
+  }
+
+  .shadow-premium {
+    box-shadow: var(--shadow-premium);
+  }
+
+  .shadow-glow {
+    box-shadow: var(--shadow-glow);
+  }
+
+  /* Glass effect para modais/overlays */
+  .glass {
+    backdrop-filter: blur(12px) saturate(1.8);
+    -webkit-backdrop-filter: blur(12px) saturate(1.8);
+    background: rgba(255, 255, 255, 0.72);
+  }
+
+  /* Animação de shimmer para loading */
+  .shimmer {
+    background: linear-gradient(
+      90deg,
+      var(--color-neutral-100) 25%,
+      var(--color-neutral-200) 50%,
+      var(--color-neutral-100) 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+  }
+
+  @keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+  /* Entrada suave para componentes */
+  .animate-in {
+    animation: fadeInUp 0.3s ease-out;
+  }
+
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}

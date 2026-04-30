@@ -1,0 +1,13 @@
+{
+  "name": "@vellovy/ui-tokens",
+  "version": "0.0.1",
+  "private": true,
+  "main": "./index.ts",
+  "types": "./index.ts",
+  "exports": {
+    ".": "./index.ts",
+    "./colors": "./colors.ts",
+    "./spacing": "./spacing.ts",
+    "./typography": "./typography.ts"
+  }
+}

@@ -1,5 +1,3 @@
-
-<<<<<<< HEAD
 -- 1. Tabela de perfis (vincula user_id ↔ telegram_chat_id)
 CREATE TABLE IF NOT EXISTS profiles (
     user_id     uuid PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -51,97 +49,17 @@ BEGIN
 END;
 $$;
 
--- Opcional: agendar via pg_cron (plano Pro) ou chamar na Edge Function
--- SELECT cron.schedule('limpar-tokens', '*/15 * * * *', 'SELECT limpar_tokens_expirados()');
-
-
--- ═══════════════════════════════════════════════════════
--- INSTRUÇÕES DE DEPLOY
--- ═══════════════════════════════════════════════════════
-
-/*
-PASSO 1 — Instalar Supabase CLI
-  npm install -g supabase
-  supabase login
-
-PASSO 2 — Vincular ao projeto
-  supabase link --project-ref <SEU_PROJECT_REF>
-  (o ref está na URL: https://supabase.com/dashboard/project/<REF>)
-
-PASSO 3 — Configurar variáveis de ambiente da Edge Function
-  supabase secrets set TELEGRAM_BOT_TOKEN=<TOKEN_DO_BOTFATHER>
-  supabase secrets set SUPABASE_SERVICE_ROLE_KEY=<SERVICE_ROLE_KEY>
-
-  As chaves estão em: Supabase > Project Settings > API
-
-PASSO 4 — Deploy da Edge Function
-  supabase functions deploy telegram-bot
-
-PASSO 5 — Registrar webhook no Telegram
-  Substitua <TOKEN> e <SEU_PROJECT_REF> e cole no navegador:
-
-  https://api.telegram.org/bot<TOKEN>/setWebhook?url=https://<SEU_PROJECT_REF>.supabase.co/functions/v1/telegram-bot
-
-  Resposta esperada: {"ok":true,"result":true}
-
-PASSO 6 — Testar
-  Abra o Telegram, ache o bot, envie:
-    /start       → recebe código de vínculo
-    ajuda        → lista de comandos
-
-PASSO 7 — Vincular no sistema web
-  Adicione no painel de Configurações (modules.js) o campo
-  para o usuário colar o token recebido do bot.
-  
-  Ao confirmar, chame:
-  
-    const { data } = await supabase
-        .from("telegram_link_tokens")
-        .select("chat_id")
-        .eq("token", tokenDigitado)
-        .gte("created_at", new Date(Date.now() - 10 * 60 * 1000).toISOString())
-        .maybeSingle();
-
-    if (data) {
-        await supabase
-            .from("profiles")
-            .upsert({ user_id: user.id, telegram_chat_id: data.chat_id });
-        await supabase.from("telegram_link_tokens").delete().eq("token", tokenDigitado);
-        toast("Telegram vinculado com sucesso!", "success");
-    } else {
-        toast("Código inválido ou expirado.", "error");
-    }
-
-
-PASSO 8 — Testar fluxo completo
-  1. No Telegram: /start → anota o código
-  2. No sistema web: Configurações > Bot Telegram > digita o código
-  3. No Telegram: "agenda hoje" → deve retornar dados reais
-
-
-CRIAÇÃO DO BOT (BotFather)
-  1. Telegram → procure @BotFather
-  2. /newbot → siga as instruções
-  3. Guarde o token (formato: 123456789:ABCdef...)
-
-VARIÁVEIS NECESSÁRIAS NO SUPABASE SECRETS
-  TELEGRAM_BOT_TOKEN          → do BotFather
-  SUPABASE_SERVICE_ROLE_KEY   → Project Settings > API > service_role
-  (SUPABASE_URL já é injetado automaticamente nas Edge Functions)
-*/
 
 -- ═══════════════════════════════════════════════════════
 -- 4. Tabela principal de dados do salão (multi-tenant)
 -- ═══════════════════════════════════════════════════════
--- Armazena todas as entidades (config, agenda, diario,
--- servicos, clientes, custos, receitas, produtos) como
--- documentos JSON, uma linha por (user_id, data_type).
+-- NOTA: Esta tabela é da v3 (JSONB). Mantida para compatibilidade
+-- durante a migração. As tabelas normalizadas estão em v2_normalized.sql.
 
 CREATE TABLE IF NOT EXISTS salao_data (
     id          bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     user_id     uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-    data_type   text NOT NULL,   -- 'config' | 'agenda' | 'diario' | 'servicos' |
-                                 -- 'clientes' | 'custos' | 'receitas' | 'produtos'
+    data_type   text NOT NULL,
     data        jsonb NOT NULL DEFAULT '[]'::jsonb,
     updated_at  timestamp with time zone DEFAULT now(),
     CONSTRAINT salao_data_user_type_uq UNIQUE (user_id, data_type)
@@ -169,16 +87,10 @@ CREATE OR REPLACE TRIGGER salao_data_updated_at
     FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 
 
--- ═══════════════════════════════════════════════════════
 -- 5. Policy complementar: front-end lê/exclui o próprio
 --    token de vínculo (fluxo Configurações > Bot Telegram)
--- ═══════════════════════════════════════════════════════
-
 CREATE POLICY "token_leitura_autenticado" ON telegram_link_tokens
     FOR SELECT USING (true);
 
 CREATE POLICY "token_delete_autenticado" ON telegram_link_tokens
     FOR DELETE USING (true);
-
-=======
->>>>>>> c64922ea543a091756dbc14b19a87785a9cbfb97
