@@ -1,42 +1,23 @@
-import { createClient } from '../client';
-import type { LancamentoCaixa, FormaPagamento } from '../../../types';
+﻿import { createClient } from '../client';
 
-export async function getLancamentosDoDia(
-  salaoId: string,
-  data: string
-): Promise<LancamentoCaixa[]> {
+export async function getLancamentosDoDia(salaoId, data) {
   const supabase = createClient();
   const { data: rows, error } = await supabase
-    .from('lancamentos_caixa')
-    .select(`*, profissional:profissionais(id, nome)`)
-    .eq('salao_id', salaoId)
-    .eq('data', data)
-    .order('created_at', { ascending: false });
-
+    .from('lancamentos_caixa').select(`*, profissional:profissionais(id, nome)`)
+    .eq('salao_id', salaoId).eq('data', data).order('created_at', { ascending: false });
   if (error) throw new Error(error.message);
-  return (rows ?? []) as unknown as LancamentoCaixa[];
+  return rows ?? [];
 }
 
-export async function criarLancamento(
-  payload: Omit<LancamentoCaixa, 'id' | 'created_at' | 'profissional'>
-): Promise<LancamentoCaixa> {
+export async function criarLancamento(payload) {
   const supabase = createClient();
-  const { data, error } = await supabase
-    .from('lancamentos_caixa')
-    .insert(payload)
-    .select()
-    .single();
-
+  const { data, error } = await supabase.from('lancamentos_caixa').insert(payload).select().single();
   if (error) throw new Error(error.message);
-  return data as unknown as LancamentoCaixa;
+  return data;
 }
 
-export async function excluirLancamento(id: string): Promise<void> {
+export async function excluirLancamento(id) {
   const supabase = createClient();
-  const { error } = await supabase
-    .from('lancamentos_caixa')
-    .delete()
-    .eq('id', id);
-
+  const { error } = await supabase.from('lancamentos_caixa').delete().eq('id', id);
   if (error) throw new Error(error.message);
 }

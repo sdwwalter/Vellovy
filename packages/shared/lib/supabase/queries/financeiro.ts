@@ -1,104 +1,47 @@
-import { createClient } from '../client';
-import type { Despesa, Repasse, ResumoMensal } from '../../../types';
+﻿import { createClient } from '../client';
 
-export async function getDespesasDoMes(
-  salaoId: string,
-  mes: string // 'YYYY-MM'
-): Promise<Despesa[]> {
+export async function getDespesasDoMes(salaoId, mes) {
   const supabase = createClient();
   const inicio = `${mes}-01`;
-  const fim = new Date(
-    parseInt(mes.split('-')[0]),
-    parseInt(mes.split('-')[1]),
-    0
-  )
-    .toISOString()
-    .split('T')[0];
-
-  const { data, error } = await supabase
-    .from('despesas')
-    .select('*')
-    .eq('salao_id', salaoId)
-    .gte('data', inicio)
-    .lte('data', fim)
-    .order('data', { ascending: false });
-
+  const { data, error } = await supabase.from('despesas').select('*')
+    .eq('salao_id', salaoId).gte('data', inicio).order('data', { ascending: false });
   if (error) throw new Error(error.message);
-  return (data ?? []) as unknown as Despesa[];
+  return data ?? [];
 }
 
-export async function criarDespesa(
-  payload: Omit<Despesa, 'id' | 'created_at'>
-): Promise<Despesa> {
+export async function criarDespesa(payload) {
   const supabase = createClient();
-  const { data, error } = await supabase
-    .from('despesas')
-    .insert(payload)
-    .select()
-    .single();
-
+  const { data, error } = await supabase.from('despesas').insert(payload).select().single();
   if (error) throw new Error(error.message);
-  return data as unknown as Despesa;
+  return data;
 }
 
-export async function excluirDespesa(id: string): Promise<void> {
+export async function excluirDespesa(id) {
   const supabase = createClient();
   const { error } = await supabase.from('despesas').delete().eq('id', id);
   if (error) throw new Error(error.message);
 }
 
-export async function getRepassesDoMes(
-  salaoId: string,
-  mes: string
-): Promise<Repasse[]> {
+export async function getRepassesDoMes(salaoId, mes) {
   const supabase = createClient();
-  const { data, error } = await supabase
-    .from('repasses')
+  const { data, error } = await supabase.from('repasses')
     .select(`*, profissional:profissionais(id, nome)`)
-    .eq('salao_id', salaoId)
-    .eq('mes_referencia', mes)
-    .order('created_at');
-
+    .eq('salao_id', salaoId).eq('mes_referencia', mes).order('created_at');
   if (error) throw new Error(error.message);
-  return (data ?? []) as unknown as Repasse[];
+  return data ?? [];
 }
 
-export async function toggleRepassePago(
-  id: string,
-  pago: boolean
-): Promise<void> {
+export async function toggleRepassePago(id, pago) {
   const supabase = createClient();
-  const { error } = await supabase
-    .from('repasses')
-    .update({ pago, pago_em: pago ? new Date().toISOString() : null })
-    .eq('id', id);
-
+  const { error } = await supabase.from('repasses')
+    .update({ pago, pago_em: pago ? new Date().toISOString() : null }).eq('id', id);
   if (error) throw new Error(error.message);
 }
 
-export async function getReceitaDoMes(
-  salaoId: string,
-  mes: string
-): Promise<number> {
+export async function getReceitaDoMes(salaoId, mes) {
   const supabase = createClient();
-  const inicio = `${mes}-01T00:00:00`;
-  const fim = new Date(
-    parseInt(mes.split('-')[0]),
-    parseInt(mes.split('-')[1]),
-    0,
-    23,
-    59,
-    59
-  ).toISOString();
-
-  const { data, error } = await supabase
-    .from('agendamentos')
-    .select('valor')
-    .eq('salao_id', salaoId)
-    .eq('status', 'concluido')
-    .gte('data_hora', inicio)
-    .lte('data_hora', fim);
-
+  const { data, error } = await supabase.from('agendamentos').select('valor')
+    .eq('salao_id', salaoId).eq('status', 'concluido').gte('data_hora', `${mes}-01T00:00:00`);
   if (error) throw new Error(error.message);
-  return (data ?? []).reduce((sum, a: { valor: number }) => sum + a.valor, 0);
+  return (data ?? []).reduce((s, a) => s + a.valor, 0);
 }
