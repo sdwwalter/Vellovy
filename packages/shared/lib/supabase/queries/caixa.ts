@@ -1,44 +1,38 @@
-// packages/shared/lib/supabase/queries/caixa.ts
-import type { SupabaseInstance } from '../types';
-import type { LancamentoCaixa } from '../../../types';
+import { createClient } from '../client';
+import type { LancamentoCaixa, FormaPagamento } from '../../../types';
 
-/** Buscar lançamentos do dia */
 export async function getLancamentosDoDia(
-  supabase: SupabaseInstance,
   salaoId: string,
-  data: string // 'YYYY-MM-DD'
+  data: string
 ): Promise<LancamentoCaixa[]> {
+  const supabase = createClient();
   const { data: rows, error } = await supabase
     .from('lancamentos_caixa')
-    .select('*')
+    .select(`*, profissional:profissionais(id, nome)`)
     .eq('salao_id', salaoId)
     .eq('data', data)
-    .order('created_at', { ascending: true });
+    .order('created_at', { ascending: false });
 
   if (error) throw new Error(error.message);
-  return (rows ?? []) as LancamentoCaixa[];
+  return (rows ?? []) as unknown as LancamentoCaixa[];
 }
 
-/** Criar lançamento no caixa */
 export async function criarLancamento(
-  supabase: SupabaseInstance,
-  dados: Omit<LancamentoCaixa, 'id' | 'created_at'>
+  payload: Omit<LancamentoCaixa, 'id' | 'created_at' | 'profissional'>
 ): Promise<LancamentoCaixa> {
+  const supabase = createClient();
   const { data, error } = await supabase
     .from('lancamentos_caixa')
-    .insert(dados)
+    .insert(payload)
     .select()
     .single();
 
   if (error) throw new Error(error.message);
-  return data as LancamentoCaixa;
+  return data as unknown as LancamentoCaixa;
 }
 
-/** Excluir lançamento */
-export async function excluirLancamento(
-  supabase: SupabaseInstance,
-  id: string
-): Promise<void> {
+export async function excluirLancamento(id: string): Promise<void> {
+  const supabase = createClient();
   const { error } = await supabase
     .from('lancamentos_caixa')
     .delete()

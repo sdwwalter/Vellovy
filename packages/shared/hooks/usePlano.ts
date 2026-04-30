@@ -1,73 +1,67 @@
-// packages/shared/hooks/usePlano.ts
-// Hook para buscar e enforçar limites do plano do salão.
-// Nota: Este hook depende de libs do app (supabase client e authStore),
-// então é usado como "recipe" — o app importa e usa diretamente.
-import { useEffect, useState } from 'react';
-import type { PlanoId } from '../lib/constants/planos';
-import { PLANOS } from '../lib/constants/planos';
+import type { PlanoSalao, PlanoId } from '../types';
 
-export interface PlanoSalaoData {
+// ============================================================
+// usePlano — @vellovy/shared/hooks/usePlano
+// Hook base (sem dependências de framework) para lógica de planos.
+// O apps/web envolve isso com React Query para reatividade.
+// ============================================================
+
+export interface PlanoInfo {
   plano: PlanoId;
   profissionais_max: number;
   tem_bot_telegram: boolean;
   tem_whatsapp_api: boolean;
-  stripe_customer_id?: string;
-  stripe_subscription_id?: string;
+  tem_relatorios: boolean;
+  status: PlanoSalao['status'];
 }
 
 /**
- * Hook para buscar plano do salão.
- * Recebe o supabase client e salaoId como parâmetros
- * para evitar dependência de path aliases do app.
+ * Verifica se o salão pode adicionar mais um profissional.
  */
-export function usePlano(
-  supabaseClient: { from: (table: string) => unknown } | null,
-  salaoId: string | null
-) {
-  const [plano, setPlano] = useState<PlanoSalaoData | null>(null);
-  const [loading, setLoading] = useState(true);
+export function podeCriarProfissional(
+  planoInfo: PlanoInfo,
+  quantidadeAtual: number
+): boolean {
+  return quantidadeAtual < planoInfo.profissionais_max;
+}
 
-  useEffect(() => {
-    if (!salaoId || !supabaseClient) {
-      setLoading(false);
-      return;
-    }
+/**
+ * Verifica se o plano tem acesso a um recurso específico.
+ */
+export function temRecurso(
+  planoInfo: PlanoInfo,
+  recurso: 'tem_bot_telegram' | 'tem_whatsapp_api' | 'tem_relatorios'
+): boolean {
+  return planoInfo[recurso];
+}
 
-    async function fetchPlano() {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const sb = supabaseClient as any;
-      const { data, error } = await sb
-        .from('planos_salao')
-        .select('*')
-        .eq('salao_id', salaoId)
-        .single();
+/**
+ * Retorna o label do plano para exibição.
+ */
+export function getPlanoLabel(planoId: PlanoId): string {
+  const labels: Record<PlanoId, string> = {
+    free:          'Free',
+    essencial:     'Essencial',
+    profissional:  'Profissional',
+    premium:       'Premium',
+    ilimitado:     'Ilimitado',
+  };
+  return labels[planoId] ?? planoId;
+}
 
-      if (error) {
-        console.error('Erro ao buscar plano:', error);
-      } else if (data) {
-        setPlano({
-          plano: data.plano as PlanoId,
-          profissionais_max: data.profissionais_max,
-          tem_bot_telegram: data.tem_bot_telegram,
-          tem_whatsapp_api: data.tem_whatsapp_api,
-          stripe_customer_id: data.stripe_customer_id,
-          stripe_subscription_id: data.stripe_subscription_id,
-        });
-      }
-      setLoading(false);
-    }
-
-    fetchPlano();
-  }, [salaoId, supabaseClient]);
-
+/**
+ * Converte registro do banco em PlanoInfo tipado.
+ */
+export function parsePlanoInfo(plano: PlanoSalao): PlanoInfo {
   return {
-    plano,
-    loading,
-    podeCriarProfissional: (qtdAtual: number) => {
-      if (!plano) return false;
-      return qtdAtual < plano.profissionais_max;
-    },
-    temTelegram: plano?.tem_bot_telegram ?? false,
-    temWhatsApp: plano?.tem_whatsapp_api ?? false,
+    plano:             plano.plano,
+    profissionais_max: plano.profissionais_max,
+    tem_bot_telegram:  plano.tem_bot_telegram,
+    tem_whatsapp_api:  plano.tem_whatsapp_api,
+    tem_relatorios:    plano.plano !== 'free',
+    status:            plano.status,
   };
 }
+
+// Re-export para uso em apps/web como hook React completo
+export { podeCriarProfissional as usePlano };

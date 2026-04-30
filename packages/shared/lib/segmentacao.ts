@@ -1,71 +1,90 @@
-// packages/shared/lib/segmentacao.ts
-// Cálculo de segmento de cliente conforme regra de negócio SCLC-G
-import type { SegmentoCliente } from '../types';
+import type { Cliente, SegmentoCliente } from '../types';
+
+// ============================================================
+// SEGMENTAÇÃO DE CLIENTES — @vellovy/shared/lib/segmentacao
+// ============================================================
 
 /**
- * Calcula o segmento do cliente baseado em:
- * - total_visitas: número de visitas totais
- * - ultima_visita: ISO string da última visita (ou null)
- *
- * Regras:
- *  0 visitas            → "nova"
- *  1-2 visitas          → "regular"
- *  3+ visitas           → "fiel"
- *  30-90 dias sem visita → "ausente"
- *  90+ dias sem visita  → "inativa"
+ * Retorna quantos dias se passaram desde a última visita do cliente.
+ * Retorna null se nunca visitou.
  */
-export function calcularSegmento(
-  totalVisitas: number,
-  ultimaVisita: string | null
-): SegmentoCliente {
-  if (totalVisitas === 0) return 'nova';
-
-  if (ultimaVisita) {
-    const diffDias = Math.floor(
-      (Date.now() - new Date(ultimaVisita).getTime()) / (1000 * 60 * 60 * 24)
-    );
-
-    if (diffDias > 90) return 'inativa';
-    if (diffDias > 30) return 'ausente';
-  }
-
-  if (totalVisitas >= 3) return 'fiel';
-  return 'regular';
+export function diasSemVisita(cliente: Cliente): number | null {
+  if (!cliente.ultima_visita) return null;
+  const ultima = new Date(cliente.ultima_visita);
+  const hoje = new Date();
+  const diff = hoje.getTime() - ultima.getTime();
+  return Math.floor(diff / (1000 * 60 * 60 * 24));
 }
 
 /**
- * Retorna quantos dias se passaram desde a última visita.
- * Se não houver data, retorna -1.
+ * Verifica se hoje é o aniversário do cliente.
  */
-export function diasSemVisita(ultimaVisita: string | null): number {
-  if (!ultimaVisita) return -1;
-  return Math.floor(
-    (Date.now() - new Date(ultimaVisita).getTime()) / (1000 * 60 * 60 * 24)
+export function isAniversarioHoje(cliente: Cliente): boolean {
+  if (!cliente.data_nascimento) return false;
+  const nascimento = new Date(cliente.data_nascimento);
+  const hoje = new Date();
+  return (
+    nascimento.getMonth() === hoje.getMonth() &&
+    nascimento.getDate() === hoje.getDate()
   );
 }
 
 /**
- * Verifica se a data de nascimento corresponde a hoje (aniversário).
+ * Retorna quantos dias faltam para o aniversário do cliente.
+ * Retorna null se não tem data cadastrada.
  */
-export function isAniversarioHoje(dataNascimento: string | null | undefined): boolean {
-  if (!dataNascimento) return false;
+export function aniversarioEm(cliente: Cliente): number | null {
+  if (!cliente.data_nascimento) return null;
+
+  const nascimento = new Date(cliente.data_nascimento);
   const hoje = new Date();
-  const nasc = new Date(dataNascimento);
-  return hoje.getMonth() === nasc.getMonth() && hoje.getDate() === nasc.getDate();
+  const proximoAniversario = new Date(
+    hoje.getFullYear(),
+    nascimento.getMonth(),
+    nascimento.getDate()
+  );
+
+  // Se já passou este ano, calcular para o próximo
+  if (proximoAniversario < hoje) {
+    proximoAniversario.setFullYear(hoje.getFullYear() + 1);
+  }
+
+  const diff = proximoAniversario.getTime() - hoje.getTime();
+  return Math.ceil(diff / (1000 * 60 * 60 * 24));
 }
 
 /**
- * Verifica se o aniversário está dentro dos próximos N dias.
+ * Calcula o segmento do cliente baseado em comportamento.
+ *
+ * Regras:
+ * - VIP:      total_gasto > R$500 E ultima_visita ≤ 60 dias
+ * - Fiel:     total_visitas ≥ 5 E ultima_visita ≤ 60 dias
+ * - Regular:  ultima_visita ≤ 90 dias
+ * - Em risco: ultima_visita entre 91–180 dias
+ * - Inativo:  ultima_visita > 180 dias
+ * - Novo:     total_visitas ≤ 1
  */
-export function aniversarioEm(dataNascimento: string | null | undefined, dias: number): boolean {
-  if (!dataNascimento) return false;
-  const hoje = new Date();
-  const nasc = new Date(dataNascimento);
-  // Ajustar para o ano corrente
-  nasc.setFullYear(hoje.getFullYear());
-  // Se já passou, verificar no próximo ano
-  if (nasc < hoje) nasc.setFullYear(hoje.getFullYear() + 1);
+export function calcularSegmento(cliente: Cliente): SegmentoCliente {
+  const dias = diasSemVisita(cliente);
 
-  const diff = Math.floor((nasc.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24));
-  return diff >= 0 && diff <= dias;
+  // Nunca visitou ou só veio uma vez
+  if (cliente.total_visitas <= 1) return 'novo';
+
+  // Sem registro de visita
+  if (dias === null) return 'novo';
+
+  // Inativo: mais de 6 meses sem aparecer
+  if (dias > 180) return 'inativo';
+
+  // Em risco: entre 3 e 6 meses
+  if (dias > 90) return 'em_risco';
+
+  // VIP: alto gasto e recente (total_gasto em centavos, 50000 = R$500)
+  if (cliente.total_gasto >= 50000 && dias <= 60) return 'vip';
+
+  // Fiel: muitas visitas e recente
+  if (cliente.total_visitas >= 5 && dias <= 60) return 'fiel';
+
+  // Regular: visita nos últimos 90 dias
+  return 'regular';
 }

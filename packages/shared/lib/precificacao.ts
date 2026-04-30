@@ -1,77 +1,66 @@
-// packages/shared/lib/precificacao.ts
-// Motor de precificação inteligente para serviços de salão
-import type { ProdutoUsado } from "../types";
+import type { ProdutoUsado } from '../types';
+
+// ============================================================
+// PRECIFICAÇÃO — @vellovy/shared/lib/precificacao
+// ============================================================
 
 /**
- * Calcula custo por grama de um produto.
- * preco_compra (centavos) / peso_gramas = custo_grama (centavos/grama)
+ * Calcula o custo de mão de obra baseado na comissão do profissional.
+ * @param precoServico  Preço do serviço em centavos
+ * @param comissaoPercentual  Ex: 40 para 40%
  */
-export function calcularCustoGrama(precoCompra: number, pesoGramas: number): number {
-  if (pesoGramas <= 0) return 0;
-  return Math.ceil(precoCompra / pesoGramas);
+export function calcularCustoMaoObra(
+  precoServico: number,
+  comissaoPercentual: number
+): number {
+  return Math.round((precoServico * comissaoPercentual) / 100);
 }
 
 /**
- * Calcula custo de mão de obra do serviço.
- * (duração em minutos / 60) * valor_hora do profissional
+ * Calcula o custo total de produtos usados em um serviço.
+ * @param produtos Lista de produtos com custo e quantidade
  */
-export function calcularCustoMaoObra(duracaoMinutos: number, valorHora: number): number {
-  return Math.round((duracaoMinutos / 60) * valorHora);
-}
-
-/**
- * Calcula custo total dos produtos usados em um serviço.
- * Soma (gramas * custo_grama) de cada produto
- */
-export function calcularCustoProdutos(produtosUsados: ProdutoUsado[]): number {
-  return produtosUsados.reduce((total, p) => total + Math.round(p.gramas * (p.produto?.custo_grama ?? 0)), 0);
+export function calcularCustoProdutos(produtos: ProdutoUsado[]): number {
+  return produtos.reduce(
+    (total, p) => total + Math.round(p.custo * p.quantidade),
+    0
+  );
 }
 
 /**
  * Calcula o custo total do serviço (mão de obra + produtos).
  */
-export function calcularCustoTotal(custoMaoObra: number, custoProdutos: number): number {
-  return custoMaoObra + custoProdutos;
+export function calcularCustoTotal(
+  precoServico: number,
+  comissaoPercentual: number,
+  produtos: ProdutoUsado[] = []
+): number {
+  const maoObra = calcularCustoMaoObra(precoServico, comissaoPercentual);
+  const produtosCusto = calcularCustoProdutos(produtos);
+  return maoObra + produtosCusto;
 }
 
 /**
- * Calcula preço ideal com base no custo total + margem desejada.
- * precoIdeal = custoTotal * (1 + margem/100)
- * Ex: custo R$ 50 + margem 100% = R$ 100
+ * Calcula a margem real do serviço em percentual.
+ * @returns Percentual de 0–100, pode ser negativo se prejuízo
  */
-export function calcularPrecoIdeal(custoTotal: number, margemDesejada: number): number {
-  return Math.round(custoTotal * (1 + margemDesejada / 100));
+export function calcularMargemReal(
+  precoServico: number,
+  custoTotal: number
+): number {
+  if (precoServico === 0) return 0;
+  return Math.round(((precoServico - custoTotal) / precoServico) * 100);
 }
 
 /**
- * Calcula a margem real dado preço e custo.
- * margem = ((preco - custo) / custo) * 100
+ * Sugere um preço ideal para atingir a margem desejada.
+ * @param custoTotal     Custo total em centavos
+ * @param margemDesejada Margem desejada em percentual (ex: 40)
  */
-export function calcularMargemReal(preco: number, custo: number): number {
-  if (custo <= 0) return preco > 0 ? 999 : 0;
-  return Math.round(((preco - custo) / custo) * 100);
-}
-
-/**
- * Precificação completa de um serviço.
- * Recebe inputs do formulário e retorna todos os valores calculados.
- */
-export function precificarServico(params: {
-  duracaoMinutos: number;
-  valorHoraProfissional: number;
-  produtosUsados: ProdutoUsado[];
-  margemDesejada: number;
-}) {
-  const custoMaoObra = calcularCustoMaoObra(params.duracaoMinutos, params.valorHoraProfissional);
-  const custoProdutos = calcularCustoProdutos(params.produtosUsados);
-  const custoTotal = calcularCustoTotal(custoMaoObra, custoProdutos);
-  const precoIdeal = calcularPrecoIdeal(custoTotal, params.margemDesejada);
-
-  return {
-    custoMaoObra,
-    custoProdutos,
-    custoTotal,
-    precoIdeal,
-    margemReal: calcularMargemReal(precoIdeal, custoTotal),
-  };
+export function calcularPrecoIdeal(
+  custoTotal: number,
+  margemDesejada: number
+): number {
+  if (margemDesejada >= 100) return custoTotal * 10; // salvaguarda
+  return Math.round(custoTotal / (1 - margemDesejada / 100));
 }

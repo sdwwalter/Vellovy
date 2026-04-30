@@ -1,110 +1,104 @@
-// packages/shared/lib/supabase/queries/financeiro.ts
-import type { SupabaseInstance } from '../types';
-import type { Despesa, Repasse, LancamentoCaixa, CustoFixo } from '../../../types';
+import { createClient } from '../client';
+import type { Despesa, Repasse, ResumoMensal } from '../../../types';
 
-/** Buscar despesas do mês */
 export async function getDespesasDoMes(
-  supabase: SupabaseInstance,
   salaoId: string,
-  mesAno: string // "2026-04"
+  mes: string // 'YYYY-MM'
 ): Promise<Despesa[]> {
+  const supabase = createClient();
+  const inicio = `${mes}-01`;
+  const fim = new Date(
+    parseInt(mes.split('-')[0]),
+    parseInt(mes.split('-')[1]),
+    0
+  )
+    .toISOString()
+    .split('T')[0];
+
   const { data, error } = await supabase
-    .from('custos_fixos')
+    .from('despesas')
     .select('*')
     .eq('salao_id', salaoId)
-    .eq('mes_ano', mesAno)
-    .order('created_at', { ascending: false });
+    .gte('data', inicio)
+    .lte('data', fim)
+    .order('data', { ascending: false });
 
   if (error) throw new Error(error.message);
-  // Mapear custos_fixos para interface Despesa
-  return (data ?? []).map((d) => ({
-    id: d.id,
-    salao_id: d.salao_id,
-    descricao: d.descricao || d.categoria,
-    valor: d.valor,
-    categoria: d.categoria as Despesa['categoria'],
-    mes_ano: d.mes_ano,
-    pago: true,
-    recorrente: false,
-  }));
+  return (data ?? []) as unknown as Despesa[];
 }
 
-/** Criar despesa */
 export async function criarDespesa(
-  supabase: SupabaseInstance,
-  dados: { salao_id: string; categoria: string; descricao: string; valor: number; mes_ano: string }
-): Promise<void> {
-  const { error } = await supabase
-    .from('custos_fixos')
-    .insert(dados);
+  payload: Omit<Despesa, 'id' | 'created_at'>
+): Promise<Despesa> {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from('despesas')
+    .insert(payload)
+    .select()
+    .single();
 
+  if (error) throw new Error(error.message);
+  return data as unknown as Despesa;
+}
+
+export async function excluirDespesa(id: string): Promise<void> {
+  const supabase = createClient();
+  const { error } = await supabase.from('despesas').delete().eq('id', id);
   if (error) throw new Error(error.message);
 }
 
-/** Excluir despesa */
-export async function excluirDespesa(
-  supabase: SupabaseInstance,
-  id: string
-): Promise<void> {
-  const { error } = await supabase
-    .from('custos_fixos')
-    .delete()
-    .eq('id', id);
-
-  if (error) throw new Error(error.message);
-}
-
-/** Buscar repasses do mês */
 export async function getRepassesDoMes(
-  supabase: SupabaseInstance,
   salaoId: string,
-  mesAno: string
+  mes: string
 ): Promise<Repasse[]> {
+  const supabase = createClient();
   const { data, error } = await supabase
     .from('repasses')
-    .select(`
-      *,
-      profissional:profissionais(id, nome)
-    `)
+    .select(`*, profissional:profissionais(id, nome)`)
     .eq('salao_id', salaoId)
-    .eq('mes_ano', mesAno)
-    .order('created_at', { ascending: false });
+    .eq('mes_referencia', mes)
+    .order('created_at');
 
   if (error) throw new Error(error.message);
-  return (data ?? []) as Repasse[];
+  return (data ?? []) as unknown as Repasse[];
 }
 
-/** Marcar repasse como pago/não-pago */
 export async function toggleRepassePago(
-  supabase: SupabaseInstance,
   id: string,
   pago: boolean
 ): Promise<void> {
+  const supabase = createClient();
   const { error } = await supabase
     .from('repasses')
-    .update({ pago })
+    .update({ pago, pago_em: pago ? new Date().toISOString() : null })
     .eq('id', id);
 
   if (error) throw new Error(error.message);
 }
 
-/** Buscar receita total do mês (soma de lançamentos do caixa) */
 export async function getReceitaDoMes(
-  supabase: SupabaseInstance,
   salaoId: string,
-  mesAno: string // "2026-04"
+  mes: string
 ): Promise<number> {
-  const inicioMes = `${mesAno}-01`;
-  const [ano, mes] = mesAno.split('-').map(Number);
-  const fimMes = `${ano}-${String(mes).padStart(2, '0')}-31`;
+  const supabase = createClient();
+  const inicio = `${mes}-01T00:00:00`;
+  const fim = new Date(
+    parseInt(mes.split('-')[0]),
+    parseInt(mes.split('-')[1]),
+    0,
+    23,
+    59,
+    59
+  ).toISOString();
 
   const { data, error } = await supabase
-    .from('lancamentos_caixa')
+    .from('agendamentos')
     .select('valor')
     .eq('salao_id', salaoId)
-    .gte('data', inicioMes)
-    .lte('data', fimMes);
+    .eq('status', 'concluido')
+    .gte('data_hora', inicio)
+    .lte('data_hora', fim);
 
   if (error) throw new Error(error.message);
-  return (data ?? []).reduce((sum, l) => sum + (l.valor || 0), 0);
+  return (data ?? []).reduce((sum, a: { valor: number }) => sum + a.valor, 0);
 }

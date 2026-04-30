@@ -1,56 +1,51 @@
-// packages/shared/lib/supabase/queries/servicos.ts
-import type { SupabaseInstance } from '../types';
-import type { Servico, Profissional } from '../../../types';
+import { createClient } from '../client';
+import type { Servico, Profissional, Produto } from '../../../types';
 
-/** Buscar serviços ativos do salão */
-export async function getServicos(
-  supabase: SupabaseInstance,
-  salaoId: string
-): Promise<Servico[]> {
+export async function getServicos(salaoId: string): Promise<Servico[]> {
+  const supabase = createClient();
   const { data, error } = await supabase
     .from('servicos')
     .select('*')
     .eq('salao_id', salaoId)
+    .eq('ativo', true)
     .order('nome');
 
   if (error) throw new Error(error.message);
-  return (data ?? []) as Servico[];
+  return (data ?? []) as unknown as Servico[];
 }
 
-/** Criar serviço */
 export async function criarServico(
-  supabase: SupabaseInstance,
-  dados: Omit<Servico, 'id'>
+  payload: Omit<Servico, 'id' | 'created_at'>
 ): Promise<Servico> {
+  const supabase = createClient();
   const { data, error } = await supabase
     .from('servicos')
-    .insert(dados)
+    .insert(payload)
     .select()
     .single();
 
   if (error) throw new Error(error.message);
-  return data as Servico;
+  return data as unknown as Servico;
 }
 
-/** Atualizar serviço */
 export async function atualizarServico(
-  supabase: SupabaseInstance,
   id: string,
-  dados: Partial<Servico>
-): Promise<void> {
-  const { error } = await supabase
+  payload: Partial<Servico>
+): Promise<Servico> {
+  const supabase = createClient();
+  const { data, error } = await supabase
     .from('servicos')
-    .update(dados)
-    .eq('id', id);
+    .update(payload)
+    .eq('id', id)
+    .select()
+    .single();
 
   if (error) throw new Error(error.message);
+  return data as unknown as Servico;
 }
 
-/** Buscar profissionais do salão */
-export async function getProfissionais(
-  supabase: SupabaseInstance,
-  salaoId: string
-): Promise<Profissional[]> {
+export async function getProfissionais(salaoId: string): Promise<Profissional[]> {
+  const supabase = createClient();
   const { data, error } = await supabase
     .from('profissionais')
     .select('*')
@@ -59,5 +54,17 @@ export async function getProfissionais(
     .order('nome');
 
   if (error) throw new Error(error.message);
-  return (data ?? []) as Profissional[];
+  return (data ?? []) as unknown as Profissional[];
+}
+
+export async function getProdutos(salaoId: string): Promise<Produto[]> {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from('produtos')
+    .select('*')
+    .eq('salao_id', salaoId)
+    .order('nome');
+
+  if (error) throw new Error(error.message);
+  return (data ?? []) as unknown as Produto[];
 }

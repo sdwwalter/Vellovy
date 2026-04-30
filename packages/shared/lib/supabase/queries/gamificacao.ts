@@ -1,69 +1,58 @@
-// packages/shared/lib/supabase/queries/gamificacao.ts
-import type { SupabaseInstance } from '../types';
+import { createClient } from '../client';
 import type { Profissional } from '../../../types';
 
-/** Buscar dados de gamificação dos profissionais */
 export async function getGamificacaoProfissionais(
-  supabase: SupabaseInstance,
   salaoId: string
 ): Promise<Profissional[]> {
+  const supabase = createClient();
   const { data, error } = await supabase
     .from('profissionais')
-    .select('*')
+    .select('id, nome, avatar_url, pontos_total, nivel, streak_dias, badges, ultimo_atendimento')
     .eq('salao_id', salaoId)
     .eq('ativo', true)
     .order('pontos_total', { ascending: false });
 
   if (error) throw new Error(error.message);
-  return (data ?? []) as Profissional[];
+  return (data ?? []) as unknown as Profissional[];
 }
 
-/** Adicionar pontos a um profissional */
 export async function adicionarPontos(
-  supabase: SupabaseInstance,
   profissionalId: string,
-  pontosAdicionais: number
+  pontos: number,
+  novoNivel?: 1 | 2 | 3 | 4 | 5,
+  novoStreak?: number
 ): Promise<void> {
-  // Usar RPC para incremento atômico, ou buscar + somar
-  const { data: prof } = await supabase
-    .from('profissionais')
-    .select('pontos_total')
-    .eq('id', profissionalId)
-    .single();
+  const supabase = createClient();
 
-  if (!prof) return;
+  const updates: Record<string, unknown> = {};
 
-  const { error } = await supabase
-    .from('profissionais')
-    .update({
-      pontos_total: prof.pontos_total + pontosAdicionais,
-      ultima_atividade: new Date().toISOString(),
-    })
-    .eq('id', profissionalId);
+  if (novoNivel !== undefined) updates.nivel = novoNivel;
+  if (novoStreak !== undefined) updates.streak_dias = novoStreak;
+  updates.ultimo_atendimento = new Date().toISOString();
 
-  if (error) throw new Error(error.message);
-}
+  const { error } = await supabase.rpc('incrementar_pontos', {
+    p_profissional_id: profissionalId,
+    p_pontos: pontos,
+  });
 
-/** Desbloquear badge */
-export async function desbloquearBadge(
-  supabase: SupabaseInstance,
-  profissionalId: string,
-  badgeId: string
-): Promise<void> {
-  const { data: prof } = await supabase
-    .from('profissionais')
-    .select('badges')
-    .eq('id', profissionalId)
-    .single();
+  if (error) {
+    // Fallback: update direto se a função RPC não existir ainda
+    const { data: prof } = await supabase
+      .from('profissionais')
+      .select('pontos_total')
+      .eq('id', profissionalId)
+      .single();
 
-  if (!prof) return;
-  const badges = prof.badges || [];
-  if (badges.includes(badgeId)) return;
-
-  const { error } = await supabase
-    .from('profissionais')
-    .update({ badges: [...badges, badgeId] })
-    .eq('id', profissionalId);
-
-  if (error) throw new Error(error.message);
+    if (prof) {
+      await supabase
+        .from('profissionais')
+        .update({ pontos_total: (prof.pontos_total ?? 0) + pontos, ...updates })
+        .eq('id', profissionalId);
+    }
+  } else if (Object.keys(updates).length > 0) {
+    await supabase
+      .from('profissionais')
+      .update(updates)
+      .eq('id', profissionalId);
+  }
 }
