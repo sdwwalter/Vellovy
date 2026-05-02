@@ -31,8 +31,8 @@ const avatarColors: Record<string, string> = {
 };
 
 export function ClienteCard({ cliente: c }: ClienteCardProps) {
-  const dias = diasSemVisita(c.ultima_visita);
-  const niver = isAniversarioHoje(c.data_nascimento);
+  const dias = diasSemVisita(c);
+  const niver = isAniversarioHoje(c);
   const initials = c.nome.split(" ").map(n => n[0]).slice(0, 2).join("").toUpperCase();
 
   return (
@@ -62,7 +62,7 @@ export function ClienteCard({ cliente: c }: ClienteCardProps) {
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-0.5">
           <h3 className="text-sm font-semibold text-text-primary truncate">{c.nome}</h3>
-          <PremiumBadge variant={c.segmento} label={SEGMENTO_LABELS[c.segmento] ?? c.segmento} size="sm" />
+          <PremiumBadge variant={c.segmento as any} label={SEGMENTO_LABELS[c.segmento] ?? c.segmento} size="sm" />
         </div>
 
         <div className="flex items-center gap-3 text-xs text-text-secondary">
@@ -81,7 +81,7 @@ export function ClienteCard({ cliente: c }: ClienteCardProps) {
         </div>
 
         {/* Risk indicator for ausentes/inativas */}
-        {(c.segmento === "ausente" || c.segmento === "inativa") && dias > 0 && (
+        {(c.segmento === "ausente" || c.segmento === "inativa" || c.segmento === "inativo") && dias !== null && dias > 0 && (
           <div className="flex items-center gap-1 mt-1">
             <AlertTriangle size={11} className={c.segmento === "inativa" ? "text-error" : "text-warning"} />
             <span className={cn("text-[10px] font-medium", c.segmento === "inativa" ? "text-error" : "text-warning")}>

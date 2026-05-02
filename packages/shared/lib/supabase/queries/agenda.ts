@@ -1,7 +1,11 @@
-﻿import { createClient } from '../client';
+import type { SupabaseInstance } from '../types';
+import type { Agendamento, StatusAgendamento } from '../../../types';
 
-export async function getAgendamentosDoDia(salaoId, data) {
-  const supabase = createClient();
+export async function getAgendamentosDoDia(
+  supabase: SupabaseInstance,
+  salaoId: string,
+  data: string
+): Promise<Agendamento[]> {
   const { data: rows, error } = await supabase
     .from('agendamentos')
     .select(`*, cliente:clientes(*), profissional:profissionais(*), servico:servicos(*)`)
@@ -10,27 +14,39 @@ export async function getAgendamentosDoDia(salaoId, data) {
     .lte('data_hora', `${data}T23:59:59`)
     .order('data_hora', { ascending: true });
   if (error) throw new Error(error.message);
-  return rows ?? [];
+  return (rows ?? []) as Agendamento[];
 }
 
-export async function criarAgendamento(payload) {
-  const supabase = createClient();
+export async function criarAgendamento(
+  supabase: SupabaseInstance,
+  payload: Omit<Agendamento, 'id' | 'created_at' | 'cliente' | 'profissional' | 'servico'>
+): Promise<Agendamento> {
   const { data, error } = await supabase
-    .from('agendamentos').insert(payload)
-    .select(`*, cliente:clientes(*), profissional:profissionais(*), servico:servicos(*)`).single();
+    .from('agendamentos')
+    .insert(payload)
+    .select(`*, cliente:clientes(*), profissional:profissionais(*), servico:servicos(*)`)
+    .single();
   if (error) throw new Error(error.message);
-  return data;
+  return data as Agendamento;
 }
 
-export async function atualizarStatusAgendamento(id, status, observacoes) {
-  const supabase = createClient();
-  const { error } = await supabase.from('agendamentos')
-    .update({ status, ...(observacoes ? { observacoes } : {}) }).eq('id', id);
+export async function atualizarStatusAgendamento(
+  supabase: SupabaseInstance,
+  id: string,
+  status: StatusAgendamento,
+  observacoes?: string
+): Promise<void> {
+  const { error } = await supabase
+    .from('agendamentos')
+    .update({ status, ...(observacoes ? { observacoes } : {}) })
+    .eq('id', id);
   if (error) throw new Error(error.message);
 }
 
-export async function excluirAgendamento(id) {
-  const supabase = createClient();
+export async function excluirAgendamento(
+  supabase: SupabaseInstance,
+  id: string
+): Promise<void> {
   const { error } = await supabase.from('agendamentos').delete().eq('id', id);
   if (error) throw new Error(error.message);
 }

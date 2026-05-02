@@ -72,10 +72,10 @@ export function ServicoForm() {
     );
     if (!disponivel) { toast("Todos os produtos já foram adicionados"); return; }
     const gramasDefault = 10;
-    const custo = Math.round(gramasDefault * disponivel.custo_grama);
+    const custo = Math.round(gramasDefault * (disponivel.custo_grama ?? 0));
     setProdutosUsados([
       ...produtosUsados,
-      { produto_id: disponivel.id, produto: disponivel, gramas: gramasDefault, custo },
+      { produto_id: disponivel.id, produto: disponivel, gramas: gramasDefault, custo, nome: disponivel.nome, quantidade: 1 },
     ]);
   };
 
@@ -95,7 +95,7 @@ export function ServicoForm() {
     setProdutosUsados((prev) =>
       prev.map((pu, i) =>
         i === idx
-          ? { ...pu, produto_id: prodId, produto: prod, custo: Math.round(pu.gramas * prod.custo_grama) }
+          ? { ...pu, produto_id: prodId, produto: prod, custo: Math.round((pu.gramas ?? 0) * (prod.custo_grama ?? 0)) }
           : pu
       )
     );
@@ -185,7 +185,7 @@ export function ServicoForm() {
             <select value={profId} onChange={(e) => setProfId(e.target.value)}
               className="w-full px-3 py-2.5 rounded-xl border border-neutral-200 text-sm bg-white cursor-pointer">
               {profissionais.filter((p) => p.ativo).map((p) => (
-                <option key={p.id} value={p.id}>{p.nome} — {fmtBRL(p.valor_hora)}/h</option>
+                <option key={p.id} value={p.id}>{p.nome} — {fmtBRL(p.valor_hora ?? 0)}/h</option>
               ))}
             </select>
           </div>
@@ -223,11 +223,11 @@ export function ServicoForm() {
                       <select value={pu.produto_id} onChange={(e) => trocarProduto(idx, e.target.value)}
                         className="flex-1 text-xs border border-neutral-200 rounded-lg px-2 py-1.5 bg-white cursor-pointer min-w-0">
                         {produtos.filter((p) => p.ativo).map((p) => (
-                          <option key={p.id} value={p.id}>{p.nome} ({fmtBRL(p.custo_grama)}/g)</option>
+                          <option key={p.id} value={p.id}>{p.nome} ({fmtBRL(p.custo_grama ?? 0)}/g)</option>
                         ))}
                       </select>
                       <div className="flex items-center gap-1 shrink-0">
-                        <input type="number" min={1} step={1} value={pu.gramas}
+                        <input type="number" min={1} step={1} value={pu.gramas ?? 0}
                           onChange={(e) => atualizarGramas(idx, Number(e.target.value))}
                           className="w-14 text-xs border border-neutral-200 rounded-lg px-2 py-1.5 text-center"
                         />

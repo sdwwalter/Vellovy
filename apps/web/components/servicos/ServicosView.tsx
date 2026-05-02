@@ -63,7 +63,7 @@ export function ServicosView() {
                   ? "bg-primary-400 text-white"
                   : "bg-neutral-100 text-neutral-500 hover:bg-neutral-200"
               )}>
-              {cat === "todos" ? "Todos" : CATEGORIA_LABELS[cat] ?? cat}
+              {cat === "todos" ? "Todos" : (CATEGORIA_LABELS as Record<string, string>)[cat] ?? cat}
             </button>
           ))}
         </div>
@@ -78,10 +78,11 @@ export function ServicosView() {
       ) : (
         <div className="space-y-3">
           {servicos.map((s) => {
-            const margem = s.custo_estimado > 0
-              ? Math.round(((s.preco_ideal - s.custo_estimado) / s.custo_estimado) * 100)
+            const custoEst = s.custo_estimado ?? 0;
+            const margem = custoEst > 0
+              ? Math.round(((s.preco_ideal - custoEst) / custoEst) * 100)
               : 0;
-            const alertaCusto = s.custo_estimado > s.preco_ideal * 0.4;
+            const alertaCusto = custoEst > s.preco_ideal * 0.4;
 
             return (
               <PremiumCard key={s.id} padding="lg" className={cn(!s.ativo && "opacity-50")}>
@@ -118,11 +119,11 @@ export function ServicosView() {
                       </div>
                       <div className="text-center">
                         <p className="text-[9px] text-text-secondary uppercase">Custo</p>
-                        <p className="text-sm font-bold text-red-500 tabular-nums">{fmtBRL(s.custo_estimado)}</p>
+                        <p className="text-sm font-bold text-red-500 tabular-nums">{fmtBRL(custoEst)}</p>
                       </div>
                       <div className="text-center">
                         <p className="text-[9px] text-text-secondary uppercase">Mão obra</p>
-                        <p className="text-xs font-semibold text-text-primary tabular-nums">{fmtBRL(s.custo_mao_obra)}</p>
+                        <p className="text-xs font-semibold text-text-primary tabular-nums">{fmtBRL(s.custo_mao_obra ?? 0)}</p>
                       </div>
                       <div className="text-center">
                         <p className="text-[9px] text-text-secondary uppercase">Margem</p>

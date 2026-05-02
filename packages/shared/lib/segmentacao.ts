@@ -44,7 +44,6 @@ export function aniversarioEm(cliente: Cliente): number | null {
     nascimento.getDate()
   );
 
-  // Se já passou este ano, calcular para o próximo
   if (proximoAniversario < hoje) {
     proximoAniversario.setFullYear(hoje.getFullYear() + 1);
   }
@@ -55,36 +54,15 @@ export function aniversarioEm(cliente: Cliente): number | null {
 
 /**
  * Calcula o segmento do cliente baseado em comportamento.
- *
- * Regras:
- * - VIP:      total_gasto > R$500 E ultima_visita ≤ 60 dias
- * - Fiel:     total_visitas ≥ 5 E ultima_visita ≤ 60 dias
- * - Regular:  ultima_visita ≤ 90 dias
- * - Em risco: ultima_visita entre 91–180 dias
- * - Inativo:  ultima_visita > 180 dias
- * - Novo:     total_visitas ≤ 1
  */
 export function calcularSegmento(cliente: Cliente): SegmentoCliente {
   const dias = diasSemVisita(cliente);
 
-  // Nunca visitou ou só veio uma vez
-  if (cliente.total_visitas <= 1) return 'novo';
-
-  // Sem registro de visita
-  if (dias === null) return 'novo';
-
-  // Inativo: mais de 6 meses sem aparecer
-  if (dias > 180) return 'inativo';
-
-  // Em risco: entre 3 e 6 meses
+  if (cliente.total_visitas <= 1) return 'nova';
+  if (dias === null) return 'nova';
+  if (dias > 180) return 'inativa';
   if (dias > 90) return 'em_risco';
-
-  // VIP: alto gasto e recente (total_gasto em centavos, 50000 = R$500)
   if (cliente.total_gasto >= 50000 && dias <= 60) return 'vip';
-
-  // Fiel: muitas visitas e recente
   if (cliente.total_visitas >= 5 && dias <= 60) return 'fiel';
-
-  // Regular: visita nos últimos 90 dias
   return 'regular';
 }

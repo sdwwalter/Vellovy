@@ -100,7 +100,7 @@ export function FinanceiroDespesas() {
         <div className="grid grid-cols-2 tablet:grid-cols-3 gap-2">
           {Object.entries(porCat).sort(([, a], [, b]) => b - a).map(([c, v]) => (
             <div key={c} className={cn("rounded-lg p-2.5 text-center", catColors[c])}>
-              <p className="text-[10px] font-medium opacity-80">{CATEGORIA_DESPESA_LABELS[c] ?? c}</p>
+              <p className="text-[10px] font-medium opacity-80">{(CATEGORIA_DESPESA_LABELS as Record<string, string>)[c] ?? c}</p>
               <p className="text-sm font-bold tabular-nums">{fmtBRL(v)}</p>
             </div>
           ))}

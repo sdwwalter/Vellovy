@@ -1,25 +1,38 @@
-﻿import { createClient } from '../client';
+import type { SupabaseInstance } from '../types';
+import type { Profissional } from '../../../types';
 
-export async function getGamificacaoProfissionais(salaoId) {
-  const supabase = createClient();
-  const { data, error } = await supabase.from('profissionais')
-    .select('id, nome, avatar_url, pontos_total, nivel, streak_dias, badges, ultimo_atendimento')
-    .eq('salao_id', salaoId).eq('ativo', true).order('pontos_total', { ascending: false });
+export async function getGamificacaoProfissionais(
+  supabase: SupabaseInstance,
+  salaoId: string
+): Promise<Profissional[]> {
+  const { data, error } = await supabase
+    .from('profissionais')
+    .select('id, nome, funcao, pontos_total, nivel, streak_dias, badges, ultima_atividade')
+    .eq('salao_id', salaoId)
+    .eq('ativo', true)
+    .order('pontos_total', { ascending: false });
   if (error) throw new Error(error.message);
-  return data ?? [];
+  return (data ?? []) as Profissional[];
 }
 
-export async function adicionarPontos(profissionalId, pontos, novoNivel, novoStreak) {
-  const supabase = createClient();
-  const updates = {};
-  if (novoNivel !== undefined) updates.nivel = novoNivel;
-  if (novoStreak !== undefined) updates.streak_dias = novoStreak;
-  updates.ultimo_atendimento = new Date().toISOString();
-  const { data: prof } = await supabase.from('profissionais')
-    .select('pontos_total').eq('id', profissionalId).single();
+export async function adicionarPontos(
+  supabase: SupabaseInstance,
+  profissionalId: string,
+  pontos: number
+): Promise<void> {
+  const { data: prof } = await supabase
+    .from('profissionais')
+    .select('pontos_total')
+    .eq('id', profissionalId)
+    .single();
+
   if (prof) {
-    await supabase.from('profissionais')
-      .update({ pontos_total: (prof.pontos_total ?? 0) + pontos, ...updates })
+    await supabase
+      .from('profissionais')
+      .update({
+        pontos_total: (prof.pontos_total ?? 0) + pontos,
+        ultima_atividade: new Date().toISOString(),
+      })
       .eq('id', profissionalId);
   }
 }

@@ -34,7 +34,7 @@ interface SecaoItem {
 
 export default function ConfiguracoesPage() {
   const [secao, setSecao] = useState<SecaoConfig>(null);
-  const { plano, loading: planoLoading, podeCriarProfissional } = usePlano();
+  const { plano, planoInfo, loading: planoLoading, podeCriarProfissional } = usePlano();
   const { salaoId, user } = useAuthStore();
   const [criandoCheckout, setCriandoCheckout] = useState(false);
 
@@ -90,9 +90,9 @@ export default function ConfiguracoesPage() {
       {BotaoVoltar}
 
       {secao === "salao" && <SecaoSalao />}
-      {secao === "whatsapp" && <SecaoWhatsApp plano={plano} />}
+      {secao === "whatsapp" && <SecaoWhatsApp plano={planoInfo} />}
       {secao === "profissionais" && (
-        <SecaoEquipe plano={plano} podeCriarProfissional={podeCriarProfissional} irParaPlano={() => setSecao("plano")} />
+        <SecaoEquipe plano={planoInfo} podeCriarProfissional={podeCriarProfissional} irParaPlano={() => setSecao("plano")} />
       )}
 
       {/* Telegram */}
@@ -108,7 +108,7 @@ export default function ConfiguracoesPage() {
       {/* Plano */}
       {secao === "plano" && (
         <SecaoPlano
-          plano={plano}
+          plano={planoInfo}
           planoLoading={planoLoading}
           salaoId={salaoId}
           userEmail={user?.email}

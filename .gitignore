@@ -44,3 +44,13 @@ coverage/
 
 # Turbo
 .turbo/
+
+# Artefatos da IA
+artefacts/
+
+# Arquivos de Planejamento e Logs Temporários
+AnaliseDeepSeek/
+*.ipynb
+implementation_plan.md
+Plano*.txt
+*.txt

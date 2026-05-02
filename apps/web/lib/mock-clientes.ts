@@ -40,7 +40,7 @@ export const MOCK_CRM_CLIENTES: Cliente[] = [
   // ─── Regulares ────────────────────────────────────────────────
   {
     id: "cli-2", salao_id: "salao-1", nome: "João Pedro Almeida",
-    telefone: "11988776655", segmento: "regular",
+    telefone: "11988776655", created_at: new Date().toISOString().split("T")[0], segmento: "regular",
     total_gasto: 45000, ultima_visita: d(12), total_visitas: 7,
   },
   {
@@ -51,7 +51,7 @@ export const MOCK_CRM_CLIENTES: Cliente[] = [
   },
   {
     id: "cli-9", salao_id: "salao-1", nome: "Bruna Oliveira",
-    telefone: "11922110099", segmento: "regular",
+    telefone: "11922110099", created_at: new Date().toISOString().split("T")[0], segmento: "regular",
     total_gasto: 28000, ultima_visita: d(15), total_visitas: 4,
   },
   {
@@ -62,14 +62,14 @@ export const MOCK_CRM_CLIENTES: Cliente[] = [
   // ─── Novas ────────────────────────────────────────────────────
   {
     id: "cli-3", salao_id: "salao-1", nome: "Fernanda Costa Lima",
-    telefone: "11977665544", segmento: "nova",
-    total_gasto: 8000, ultima_visita: null, total_visitas: 1,
+    telefone: "11977665544", created_at: new Date().toISOString().split("T")[0], segmento: "nova",
+    total_gasto: 8000, ultima_visita: undefined, total_visitas: 1,
     observacoes: "Veio por indicação da Maria Eduarda.",
   },
   {
     id: "cli-11", salao_id: "salao-1", nome: "Isabela Nakamura",
     telefone: "11900998877", email: "isa.naka@gmail.com", segmento: "nova",
-    total_gasto: 0, ultima_visita: null, total_visitas: 0,
+    total_gasto: 0, ultima_visita: undefined, total_visitas: 0,
   },
   // ─── Ausentes ─────────────────────────────────────────────────
   {
@@ -81,18 +81,18 @@ export const MOCK_CRM_CLIENTES: Cliente[] = [
   },
   {
     id: "cli-13", salao_id: "salao-1", nome: "Roberta Gomes",
-    telefone: "11955667788", segmento: "ausente",
+    telefone: "11955667788", created_at: new Date().toISOString().split("T")[0], segmento: "ausente",
     total_gasto: 42000, ultima_visita: d(60), total_visitas: 6,
   },
   // ─── Inativas ─────────────────────────────────────────────────
   {
     id: "cli-7", salao_id: "salao-1", nome: "Daniela Fonseca",
-    telefone: "11933445566", segmento: "inativa",
+    telefone: "11933445566", created_at: new Date().toISOString().split("T")[0], segmento: "inativa",
     total_gasto: 35000, ultima_visita: d(120), total_visitas: 4,
   },
   {
     id: "cli-14", salao_id: "salao-1", nome: "Mariana Teixeira",
-    telefone: "11977889900", segmento: "inativa",
+    telefone: "11977889900", created_at: new Date().toISOString().split("T")[0], segmento: "inativa",
     total_gasto: 15000, ultima_visita: d(150), total_visitas: 2,
   },
 ];

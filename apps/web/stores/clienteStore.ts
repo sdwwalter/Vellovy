@@ -100,7 +100,7 @@ export const useClienteStore = create<ClienteState>()(
           // Recalcular segmento localmente para exibição
           const atualizados = clientes.map((c) => ({
             ...c,
-            segmento: calcularSegmento(c.total_visitas, c.ultima_visita),
+            segmento: calcularSegmento(c),
           }));
 
           set({ clientes: atualizados, isLoading: false });
@@ -209,17 +209,19 @@ export const useClienteStore = create<ClienteState>()(
         clientes.forEach((c) => {
           if (c.segmento === "fiel") fieis++;
           else if (c.segmento === "ausente") ausentes++;
-          else if (c.segmento === "inativa") inativas++;
-          else if (c.segmento === "nova") novas++;
+          else if (c.segmento === "inativa" || c.segmento === "inativo") inativas++;
+          else if (c.segmento === "nova" || c.segmento === "novo") novas++;
 
           gastoTotal += c.total_gasto;
           visitasTotal += c.total_visitas;
 
-          if (aniversarioEm(c.data_nascimento, 7)) {
+          const diasAniver = aniversarioEm(c);
+          if (diasAniver !== null && diasAniver <= 7) {
             aniversariantes.push(c);
           }
 
-          if (c.segmento === "ausente" && diasSemVisita(c.ultima_visita) > 60) {
+          const dias = diasSemVisita(c);
+          if (c.segmento === "ausente" && dias !== null && dias > 60) {
             emRisco.push(c);
           }
         });

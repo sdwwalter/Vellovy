@@ -64,7 +64,7 @@ export function AgendaForm() {
         duracao_minutos: duracao,
         status: "agendado",
         valor,
-        criado_via_caixa: false,
+        observacoes: obs.trim() || undefined,
       });
       toast.success("✓ Agendamento criado com sucesso");
       resetForm();

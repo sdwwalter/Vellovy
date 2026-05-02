@@ -1,47 +1,90 @@
-﻿import { createClient } from '../client';
+import type { SupabaseInstance } from '../types';
+import type { Despesa, Repasse } from '../../../types';
 
-export async function getDespesasDoMes(salaoId, mes) {
-  const supabase = createClient();
-  const inicio = `${mes}-01`;
-  const { data, error } = await supabase.from('despesas').select('*')
-    .eq('salao_id', salaoId).gte('data', inicio).order('data', { ascending: false });
+export async function getDespesasDoMes(
+  supabase: SupabaseInstance,
+  salaoId: string,
+  mes: string
+): Promise<Despesa[]> {
+  // Tabela no banco: custos_fixos (não "despesas")
+  const { data, error } = await supabase
+    .from('custos_fixos')
+    .select('*')
+    .eq('salao_id', salaoId)
+    .eq('mes_ano', mes)
+    .order('created_at', { ascending: false });
   if (error) throw new Error(error.message);
-  return data ?? [];
+  return (data ?? []) as Despesa[];
 }
 
-export async function criarDespesa(payload) {
-  const supabase = createClient();
-  const { data, error } = await supabase.from('despesas').insert(payload).select().single();
+export async function criarDespesa(
+  supabase: SupabaseInstance,
+  payload: {
+    salao_id: string;
+    categoria: string;
+    descricao?: string;
+    valor: number;
+    mes_ano: string;
+    data_vencimento?: string;
+    pago?: boolean;
+    recorrente?: boolean;
+  }
+): Promise<Despesa> {
+  const { data, error } = await supabase
+    .from('custos_fixos')
+    .insert({ ...payload, pago: payload.pago ?? false })
+    .select()
+    .single();
   if (error) throw new Error(error.message);
-  return data;
+  return data as Despesa;
 }
 
-export async function excluirDespesa(id) {
-  const supabase = createClient();
-  const { error } = await supabase.from('despesas').delete().eq('id', id);
+export async function excluirDespesa(
+  supabase: SupabaseInstance,
+  id: string
+): Promise<void> {
+  const { error } = await supabase.from('custos_fixos').delete().eq('id', id);
   if (error) throw new Error(error.message);
 }
 
-export async function getRepassesDoMes(salaoId, mes) {
-  const supabase = createClient();
-  const { data, error } = await supabase.from('repasses')
-    .select(`*, profissional:profissionais(id, nome)`)
-    .eq('salao_id', salaoId).eq('mes_referencia', mes).order('created_at');
+export async function getRepassesDoMes(
+  supabase: SupabaseInstance,
+  salaoId: string,
+  mes: string
+): Promise<Repasse[]> {
+  const { data, error } = await supabase
+    .from('repasses')
+    .select(`*, profissional:profissionais(id, nome, funcao)`)
+    .eq('salao_id', salaoId)
+    .eq('mes_ano', mes)
+    .order('created_at');
   if (error) throw new Error(error.message);
-  return data ?? [];
+  return (data ?? []) as Repasse[];
 }
 
-export async function toggleRepassePago(id, pago) {
-  const supabase = createClient();
-  const { error } = await supabase.from('repasses')
-    .update({ pago, pago_em: pago ? new Date().toISOString() : null }).eq('id', id);
+export async function toggleRepassePago(
+  supabase: SupabaseInstance,
+  id: string,
+  pago: boolean
+): Promise<void> {
+  const { error } = await supabase
+    .from('repasses')
+    .update({ pago })
+    .eq('id', id);
   if (error) throw new Error(error.message);
 }
 
-export async function getReceitaDoMes(salaoId, mes) {
-  const supabase = createClient();
-  const { data, error } = await supabase.from('agendamentos').select('valor')
-    .eq('salao_id', salaoId).eq('status', 'concluido').gte('data_hora', `${mes}-01T00:00:00`);
+export async function getReceitaDoMes(
+  supabase: SupabaseInstance,
+  salaoId: string,
+  mes: string
+): Promise<number> {
+  const { data, error } = await supabase
+    .from('agendamentos')
+    .select('valor')
+    .eq('salao_id', salaoId)
+    .eq('status', 'realizado')
+    .gte('data_hora', `${mes}-01T00:00:00`);
   if (error) throw new Error(error.message);
-  return (data ?? []).reduce((s, a) => s + a.valor, 0);
+  return (data ?? []).reduce((s: number, a: { valor: number }) => s + a.valor, 0);
 }

@@ -78,7 +78,7 @@ export function FinanceiroResumo({ dre, receitasMes, historico }: FinanceiroResu
               return (
                 <div key={forma} className="flex items-center gap-3">
                   <div className="w-6">{pagIcons[forma]}</div>
-                  <span className="text-xs text-text-secondary w-16">{FORMA_PAGAMENTO_LABELS[forma] ?? forma}</span>
+                  <span className="text-xs text-text-secondary w-16">{(FORMA_PAGAMENTO_LABELS as Record<string, string>)[forma] ?? forma}</span>
                   <div className="flex-1 bg-neutral-100 rounded-full h-2.5 overflow-hidden">
                     <div
                       className={cn("h-full rounded-full transition-all duration-700",

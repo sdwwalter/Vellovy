@@ -45,9 +45,10 @@ export function ClientePerfil({ clienteId }: ClientePerfilProps) {
     );
   }
 
-  const dias = diasSemVisita(c.ultima_visita);
-  const niver = isAniversarioHoje(c.data_nascimento);
-  const niverProximo = aniversarioEm(c.data_nascimento, 7);
+  const dias = diasSemVisita(c);
+  const niver = isAniversarioHoje(c);
+  const diasAniver = aniversarioEm(c);
+  const niverProximo = diasAniver !== null && diasAniver <= 7;
   const ticketMedio = c.total_visitas > 0 ? Math.round(c.total_gasto / c.total_visitas) : 0;
 
   // Serviço favorito (mais frequente no histórico)
@@ -57,7 +58,7 @@ export function ClientePerfil({ clienteId }: ClientePerfilProps) {
 
   // Frequência média (dias entre visitas)
   const frequenciaMedia = c.total_visitas > 1 && c.ultima_visita
-    ? Math.round(diasSemVisita(c.ultima_visita) / c.total_visitas)
+    ? Math.round((diasSemVisita(c) ?? 0) / c.total_visitas)
     : null;
 
   const handleDel = () => {
@@ -97,7 +98,7 @@ export function ClientePerfil({ clienteId }: ClientePerfilProps) {
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
               <h1 className="text-xl font-bold text-text-primary font-[family-name:var(--font-display)] truncate">{c.nome}</h1>
-              <PremiumBadge variant={c.segmento} label={SEGMENTO_LABELS[c.segmento]} size="md" dot />
+              <PremiumBadge variant={c.segmento as any} label={SEGMENTO_LABELS[c.segmento]} size="md" dot />
             </div>
 
             {/* Contact info */}
@@ -119,7 +120,7 @@ export function ClientePerfil({ clienteId }: ClientePerfilProps) {
             </div>
 
             {/* Risk alert */}
-            {(c.segmento === "ausente" || c.segmento === "inativa") && dias > 0 && (
+            {(c.segmento === "ausente" || c.segmento === "inativa" || c.segmento === "inativo") && dias !== null && dias > 0 && (
               <div className="flex items-center gap-2 mt-3 p-2.5 bg-warning/5 border border-warning/20 rounded-lg">
                 <AlertTriangle size={14} className="text-warning shrink-0" />
                 <p className="text-xs text-warning font-medium">

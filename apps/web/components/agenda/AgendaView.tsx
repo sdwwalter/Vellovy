@@ -75,7 +75,7 @@ export function AgendaView() {
         </div>
         {Object.entries(counts).map(([status, count]) => (
           <div key={status} className="shrink-0">
-            <PremiumBadge variant={status as StatusAgendamento} label={`${count} ${STATUS_LABELS[status] ?? status}`} size="sm" dot />
+            <PremiumBadge variant={status as StatusAgendamento} label={`${count} ${STATUS_LABELS[status as StatusAgendamento] ?? status}`} size="sm" dot />
           </div>
         ))}
       </div>

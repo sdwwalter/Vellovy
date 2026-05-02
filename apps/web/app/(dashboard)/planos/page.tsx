@@ -13,7 +13,7 @@ import { toast } from "sonner";
 import { Check, X } from "lucide-react";
 
 export default function PlanosPage() {
-  const { plano, loading: planoLoading } = usePlano();
+  const { planoInfo, loading: planoLoading } = usePlano();
   const { salaoId, user } = useAuthStore();
   const [cicloAnual, setCicloAnual] = useState(false);
   const [criandoCheckout, setCriandoCheckout] = useState<string | null>(null);
@@ -43,10 +43,10 @@ export default function PlanosPage() {
   const gerenciarAssinatura = async () => {
     setCriandoCheckout("gerenciar");
     try {
-      if (!plano?.stripe_customer_id) throw new Error("Assinatura não encontrada");
+      if (!planoInfo?.stripe_customer_id) throw new Error("Assinatura não encontrada");
       const supabase = createClient();
       const { data, error } = await supabase.functions.invoke('portal-cliente', {
-        body: { stripeCustomerId: plano.stripe_customer_id, origin: window.location.origin }
+        body: { stripeCustomerId: planoInfo?.stripe_customer_id, origin: window.location.origin }
       });
       if (error) throw error;
       window.location.href = data.url;
@@ -64,11 +64,11 @@ export default function PlanosPage() {
     <>
       <PageHeader title="Planos" subtitle="Evolua seu salão para o próximo nível" />
 
-      {plano?.stripe_customer_id && (
+      {planoInfo?.stripe_customer_id && (
         <div className="mb-6 animate-in">
           <PremiumCard padding="md" className="flex items-center justify-between border-primary-200 bg-primary-50/30">
             <div>
-              <h3 className="font-bold text-primary-800">Seu plano atual é {plano.plano.toUpperCase()}</h3>
+              <h3 className="font-bold text-primary-800">Seu plano atual é {planoInfo?.plano?.toUpperCase()}</h3>
               <p className="text-sm text-primary-600/80">Você pode alterar ou cancelar a qualquer momento.</p>
             </div>
             <PremiumButton isLoading={criandoCheckout === "gerenciar"} onClick={gerenciarAssinatura}>
@@ -118,9 +118,9 @@ export default function PlanosPage() {
             className="w-full"
             isLoading={criandoCheckout === "essencial"}
             onClick={() => assinarPlano("essencial", cicloAnual ? "price_essencial_anual" : "price_essencial_mensal")}
-            disabled={plano?.plano === 'essencial'}
+            disabled={planoInfo?.plano === 'essencial'}
           >
-            {plano?.plano === 'essencial' ? 'Plano Atual' : 'Assinar Essencial'}
+            {planoInfo?.plano === 'essencial' ? 'Plano Atual' : 'Assinar Essencial'}
           </PremiumButton>
         </PremiumCard>
 
@@ -148,9 +148,9 @@ export default function PlanosPage() {
             className="w-full bg-amber-500 hover:bg-amber-600 border-amber-600 shadow-amber-500/20"
             isLoading={criandoCheckout === "profissional"}
             onClick={() => assinarPlano("profissional", cicloAnual ? "price_profissional_anual" : "price_profissional_mensal")}
-            disabled={plano?.plano === 'profissional'}
+            disabled={planoInfo?.plano === 'profissional'}
           >
-            {plano?.plano === 'profissional' ? 'Plano Atual' : 'Assinar Profissional'}
+            {planoInfo?.plano === 'profissional' ? 'Plano Atual' : 'Assinar Profissional'}
           </PremiumButton>
         </PremiumCard>
 
@@ -175,9 +175,9 @@ export default function PlanosPage() {
             className="w-full"
             isLoading={criandoCheckout === "premium"}
             onClick={() => assinarPlano("premium", cicloAnual ? "price_premium_anual" : "price_premium_mensal")}
-            disabled={plano?.plano === 'premium'}
+            disabled={planoInfo?.plano === 'premium'}
           >
-            {plano?.plano === 'premium' ? 'Plano Atual' : 'Assinar Premium'}
+            {planoInfo?.plano === 'premium' ? 'Plano Atual' : 'Assinar Premium'}
           </PremiumButton>
         </PremiumCard>
       </div>

@@ -6,8 +6,12 @@ export interface PlanoInfo {
   tem_bot_telegram: boolean;
   tem_whatsapp_api: boolean;
   tem_relatorios: boolean;
+  stripe_customer_id?: string;
   status: PlanoSalao['status'];
 }
+
+/** Alias para compatibilidade com componentes que importam PlanoSalaoData */
+export type PlanoSalaoData = PlanoInfo;
 
 /**
  * Verifica se o salão pode adicionar mais um profissional.
@@ -53,6 +57,7 @@ export function parsePlanoInfo(plano: PlanoSalao): PlanoInfo {
     tem_bot_telegram: plano.tem_bot_telegram,
     tem_whatsapp_api: plano.tem_whatsapp_api,
     tem_relatorios: plano.plano !== 'free',
+    stripe_customer_id: plano.stripe_customer_id,
     status: plano.status,
   };
 }

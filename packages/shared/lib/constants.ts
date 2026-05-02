@@ -7,8 +7,7 @@ import type { StatusAgendamento, FormaPagamento, CategoriaServico, CategoriaDesp
 export const STATUS_LABELS: Record<StatusAgendamento, string> = {
   agendado:     'Agendado',
   confirmado:   'Confirmado',
-  em_andamento: 'Em andamento',
-  concluido:    'Concluído',
+  realizado:    'Realizado',
   cancelado:    'Cancelado',
   no_show:      'Não compareceu',
 };
@@ -16,8 +15,7 @@ export const STATUS_LABELS: Record<StatusAgendamento, string> = {
 export const STATUS_CORES: Record<StatusAgendamento, string> = {
   agendado:     'bg-blue-100 text-blue-700',
   confirmado:   'bg-green-100 text-green-700',
-  em_andamento: 'bg-yellow-100 text-yellow-700',
-  concluido:    'bg-emerald-100 text-emerald-700',
+  realizado:    'bg-emerald-100 text-emerald-700',
   cancelado:    'bg-neutral-100 text-neutral-500',
   no_show:      'bg-red-100 text-red-600',
 };
@@ -39,12 +37,16 @@ export const CATEGORIA_LABELS: Record<CategoriaServico, string> = {
 };
 
 export const CATEGORIA_DESPESA_LABELS: Record<CategoriaDespesa, string> = {
-  aluguel:      'Aluguel',
-  produtos:     'Produtos',
-  equipamentos: 'Equipamentos',
-  marketing:    'Marketing',
-  pessoal:      'Pessoal',
-  outros:       'Outros',
+  aluguel:        'Aluguel',
+  agua_luz:       'Água/Luz',
+  produtos:       'Produtos',
+  equipamentos:   'Equipamentos',
+  marketing:      'Marketing',
+  impostos:       'Impostos',
+  manutencao:     'Manutenção',
+  folha_pagamento:'Folha Pagto.',
+  pessoal:        'Pessoal',
+  outros:         'Outros',
 };
 
 export const SEGMENTO_LABELS: Record<SegmentoCliente, string> = {
@@ -52,7 +54,10 @@ export const SEGMENTO_LABELS: Record<SegmentoCliente, string> = {
   fiel:     'Fiel',
   regular:  'Regular',
   novo:     'Novo',
+  nova:     'Nova',
   inativo:  'Inativo',
+  inativa:  'Inativa',
+  ausente:  'Ausente',
   em_risco: 'Em risco',
 };
 
@@ -61,7 +66,10 @@ export const SEGMENTO_CORES: Record<SegmentoCliente, string> = {
   fiel:     'bg-green-100 text-green-700',
   regular:  'bg-blue-100 text-blue-700',
   novo:     'bg-purple-100 text-purple-700',
+  nova:     'bg-purple-100 text-purple-700',
   inativo:  'bg-neutral-100 text-neutral-500',
+  inativa:  'bg-neutral-100 text-neutral-500',
+  ausente:  'bg-orange-100 text-orange-700',
   em_risco: 'bg-red-100 text-red-600',
 };
 

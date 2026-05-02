@@ -16,21 +16,21 @@ const mesAnterior = (offset: number) => {
 
 // ─── Despesas fixas do mês atual ────────────────────────────────
 export const MOCK_DESPESAS: Despesa[] = [
-  { id: "desp-1", salao_id: "salao-1", descricao: "Aluguel do imóvel", valor: 350000, categoria: "aluguel", mes_ano: mesAtual(), data_vencimento: `${mesAtual()}-10`, pago: true, recorrente: true },
-  { id: "desp-2", salao_id: "salao-1", descricao: "Energia elétrica", valor: 48000, categoria: "agua_luz", mes_ano: mesAtual(), data_vencimento: `${mesAtual()}-15`, pago: true, recorrente: true },
-  { id: "desp-3", salao_id: "salao-1", descricao: "Água e esgoto", valor: 12000, categoria: "agua_luz", mes_ano: mesAtual(), data_vencimento: `${mesAtual()}-20`, pago: false, recorrente: true },
-  { id: "desp-4", salao_id: "salao-1", descricao: "Produtos (tintas, shampoo)", valor: 85000, categoria: "produtos", mes_ano: mesAtual(), pago: true, recorrente: false },
-  { id: "desp-5", salao_id: "salao-1", descricao: "Internet + telefone", valor: 18000, categoria: "outros", mes_ano: mesAtual(), data_vencimento: `${mesAtual()}-05`, pago: true, recorrente: true },
-  { id: "desp-6", salao_id: "salao-1", descricao: "DAS Simples Nacional", valor: 65000, categoria: "impostos", mes_ano: mesAtual(), data_vencimento: `${mesAtual()}-20`, pago: false, recorrente: true },
-  { id: "desp-7", salao_id: "salao-1", descricao: "Instagram Ads", valor: 30000, categoria: "marketing", mes_ano: mesAtual(), pago: true, recorrente: true },
-  { id: "desp-8", salao_id: "salao-1", descricao: "Manutenção secadores", valor: 22000, categoria: "manutencao", mes_ano: mesAtual(), pago: false, recorrente: false },
+  { id: "desp-1", salao_id: "salao-1", descricao: "Aluguel do imóvel", valor: 350000, categoria: "aluguel", mes_ano: mesAtual(), data_vencimento: `${mesAtual()}-10`, pago: true, recorrente: true, created_at: mesAtual() },
+  { id: "desp-2", salao_id: "salao-1", descricao: "Energia elétrica", valor: 48000, categoria: "agua_luz", mes_ano: mesAtual(), data_vencimento: `${mesAtual()}-15`, pago: true, recorrente: true, created_at: mesAtual() },
+  { id: "desp-3", salao_id: "salao-1", descricao: "Água e esgoto", valor: 12000, categoria: "agua_luz", mes_ano: mesAtual(), data_vencimento: `${mesAtual()}-20`, pago: false, recorrente: true, created_at: mesAtual() },
+  { id: "desp-4", salao_id: "salao-1", descricao: "Produtos (tintas, shampoo)", valor: 85000, categoria: "produtos", mes_ano: mesAtual(), pago: true, recorrente: false, created_at: mesAtual() },
+  { id: "desp-5", salao_id: "salao-1", descricao: "Internet + telefone", valor: 18000, categoria: "outros", mes_ano: mesAtual(), data_vencimento: `${mesAtual()}-05`, pago: true, recorrente: true, created_at: mesAtual() },
+  { id: "desp-6", salao_id: "salao-1", descricao: "DAS Simples Nacional", valor: 65000, categoria: "impostos", mes_ano: mesAtual(), data_vencimento: `${mesAtual()}-20`, pago: false, recorrente: true, created_at: mesAtual() },
+  { id: "desp-7", salao_id: "salao-1", descricao: "Instagram Ads", valor: 30000, categoria: "marketing", mes_ano: mesAtual(), pago: true, recorrente: true, created_at: mesAtual() },
+  { id: "desp-8", salao_id: "salao-1", descricao: "Manutenção secadores", valor: 22000, categoria: "manutencao", mes_ano: mesAtual(), pago: false, recorrente: false, created_at: mesAtual() },
 ];
 
 // ─── Repasses do mês ────────────────────────────────────────────
 export const MOCK_REPASSES: Repasse[] = [
-  { id: "rep-1", salao_id: "salao-1", profissional_id: "prof-1", profissional: MOCK_PROFISSIONAIS[0], mes_ano: mesAtual(), valor_total: 480000, percentual: 40, valor_repasse: 192000, pago: false },
-  { id: "rep-2", salao_id: "salao-1", profissional_id: "prof-2", profissional: MOCK_PROFISSIONAIS[1], mes_ano: mesAtual(), valor_total: 220000, percentual: 35, valor_repasse: 77000, pago: true },
-  { id: "rep-3", salao_id: "salao-1", profissional_id: "prof-3", profissional: MOCK_PROFISSIONAIS[2], mes_ano: mesAtual(), valor_total: 140000, percentual: 30, valor_repasse: 42000, pago: false },
+  { id: "rep-1", salao_id: "salao-1", profissional_id: "prof-1", profissional: MOCK_PROFISSIONAIS[0], mes_ano: mesAtual(), valor_total: 480000, percentual: 40, valor_repasse: 192000, pago: false, created_at: mesAtual() },
+  { id: "rep-2", salao_id: "salao-1", profissional_id: "prof-2", profissional: MOCK_PROFISSIONAIS[1], mes_ano: mesAtual(), valor_total: 220000, percentual: 35, valor_repasse: 77000, pago: true, created_at: mesAtual() },
+  { id: "rep-3", salao_id: "salao-1", profissional_id: "prof-3", profissional: MOCK_PROFISSIONAIS[2], mes_ano: mesAtual(), valor_total: 140000, percentual: 30, valor_repasse: 42000, pago: false, created_at: mesAtual() },
 ];
 
 // ─── Receitas simuladas para 12 meses ────────────────────────────
