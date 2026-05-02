@@ -2,7 +2,7 @@
 "use client";
 
 import { useState } from "react";
-import { Clock, CheckCircle2, XCircle, AlertTriangle, User, Scissors, MoreVertical, Phone } from "lucide-react";
+import { Clock, CheckCircle2, XCircle, AlertTriangle, User, Scissors, MoreVertical, Phone, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { PremiumBadge } from "@/components/ui/PremiumBadge";
 import type { Agendamento, StatusAgendamento } from "@vellovy/shared/types";
@@ -13,6 +13,8 @@ interface AgendaSlotProps {
   agendamento: Agendamento;
   onChangeStatus: (id: string, status: StatusAgendamento) => void;
   onDelete: (id: string) => void;
+  onReagendar?: (agendamento: Agendamento) => void;
+  onClienteClick?: (clienteId: string) => void;
 }
 
 const statusBg: Record<StatusAgendamento, string> = {
@@ -41,7 +43,7 @@ const nextLabel: Record<string, string> = {
   confirmado: "Marcar realizado →",
 };
 
-export function AgendaSlot({ agendamento: ag, onChangeStatus, onDelete }: AgendaSlotProps) {
+export function AgendaSlot({ agendamento: ag, onChangeStatus, onDelete, onReagendar, onClienteClick }: AgendaSlotProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [pendingDel, setPendingDel] = useState(false);
 
@@ -69,7 +71,17 @@ export function AgendaSlot({ agendamento: ag, onChangeStatus, onDelete }: Agenda
         <div className="flex-1 py-3 px-4 min-w-0">
           <div className="flex items-start justify-between gap-2 mb-1">
             <div className="min-w-0">
-              <h3 className={cn("text-sm font-semibold text-text-primary truncate", ag.status === "cancelado" && "line-through")}>{nome}</h3>
+              <h3
+                className={cn(
+                  "text-sm font-semibold text-text-primary truncate",
+                  ag.status === "cancelado" && "line-through",
+                  onClienteClick && ag.cliente_id && "cursor-pointer hover:text-primary-500 transition-colors"
+                )}
+                onClick={() => onClienteClick && ag.cliente_id && onClienteClick(ag.cliente_id)}
+                title={onClienteClick ? "Ver resumo do cliente" : undefined}
+              >
+                {nome}
+              </h3>
               <p className="text-xs text-text-secondary flex items-center gap-1.5 mt-0.5">
                 <Scissors size={12} /><span className="truncate">{servico}</span>
                 <span className="text-neutral-300">·</span>
@@ -85,6 +97,7 @@ export function AgendaSlot({ agendamento: ag, onChangeStatus, onDelete }: Agenda
                   <div className="absolute right-0 top-10 z-20 bg-white rounded-xl shadow-lg border border-neutral-200 py-1 min-w-[180px] animate-in">
                     {next && <button onClick={() => { onChangeStatus(ag.id, next); setMenuOpen(false); }} className="w-full text-left px-4 py-2.5 text-sm hover:bg-primary-50 text-primary-600 font-medium cursor-pointer">{nextLabel[ag.status]}</button>}
                     {ag.cliente?.telefone && <a href={`https://wa.me/55${ag.cliente.telefone.replace(/\D/g, "")}`} target="_blank" rel="noopener noreferrer" className="block px-4 py-2.5 text-sm hover:bg-neutral-50 text-text-secondary cursor-pointer"><Phone size={14} className="inline mr-2" />WhatsApp</a>}
+                    {onReagendar && (ag.status === "cancelado" || ag.status === "no_show") && <button onClick={() => { onReagendar(ag); setMenuOpen(false); }} className="w-full text-left px-4 py-2.5 text-sm hover:bg-blue-50 text-blue-600 font-medium cursor-pointer"><RefreshCw size={14} className="inline mr-2" />Reagendar</button>}
                     {ag.status !== "cancelado" && ag.status !== "realizado" && <button onClick={() => { onChangeStatus(ag.id, "cancelado"); setMenuOpen(false); }} className="w-full text-left px-4 py-2.5 text-sm hover:bg-neutral-50 text-warning cursor-pointer">Cancelar</button>}
                     <button onClick={handleDel} className={cn("w-full text-left px-4 py-2.5 text-sm cursor-pointer", pendingDel ? "bg-red-50 text-error font-semibold" : "hover:bg-red-50 text-error/70")}>{pendingDel ? "⚠ Confirmar exclusão" : "Excluir"}</button>
                   </div>
@@ -98,9 +111,19 @@ export function AgendaSlot({ agendamento: ag, onChangeStatus, onDelete }: Agenda
           </div>
         </div>
       </div>
-      {/* Quick action */}
+      {/* Quick action — avançar status */}
       {next && (
         <button onClick={() => onChangeStatus(ag.id, next)} className={cn("w-full py-2 text-xs font-medium rounded-b-xl border-t cursor-pointer transition-all", "tablet:opacity-0 tablet:group-hover:opacity-100", ag.status === "agendado" ? "bg-primary-50 text-primary-600 border-primary-100 hover:bg-primary-100" : "bg-emerald-50 text-emerald-600 border-emerald-100 hover:bg-emerald-100")}>{nextLabel[ag.status]}</button>
+      )}
+      {/* Quick action — reagendar cancelados/no_show */}
+      {!next && onReagendar && (ag.status === "cancelado" || ag.status === "no_show") && (
+        <button
+          onClick={() => onReagendar(ag)}
+          className="w-full py-2 text-xs font-medium rounded-b-xl border-t cursor-pointer transition-all bg-blue-50 text-blue-600 border-blue-100 hover:bg-blue-100 flex items-center justify-center gap-1.5"
+        >
+          <RefreshCw size={12} />
+          Reagendar
+        </button>
       )}
     </div>
   );

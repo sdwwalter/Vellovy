@@ -44,7 +44,7 @@ export const useAuthStore = create<AuthStore>((set) => ({
       set({
         user,
         salaoId: membro?.salao_id ?? null,
-        role: (membro?.role as AuthStore['role']) ?? 'owner',
+        role: (membro?.role as AuthStore['role']) ?? 'profissional',
         profissionalId: membro?.profissional_id ?? null,
         isLoading: false,
       });
